@@ -1,10 +1,67 @@
-service: backend
-frameworkVersion: '3'
+service: izzy-forms
+frameworkVersion: "3"
 
 provider:
   name: aws
   runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: us-west-2
+  apiGateway:
+    apiKeySourceType: HEADER
+    minimumCompressionSize: 1024
+    shouldStartNameWithService: true
+  environment:
+    REGION: ${self:provider.region}
+    FORMS_TABLE: ${self:custom.formsTableName}
+
+plugins:
+  - serverless-iam-roles-per-function
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  formsTableName: forms-table-${self:provider.stage}
 
 functions:
-  function1:
-    handler: index.handler
+  - ${file(./src/functions/createForm/serverless.yml)}
+  - ${file(./src/functions/getFormsByOwner/serverless.yml)}
+  - ${file(./src/functions/getForm/serverless.yml)}
+  - ${file(./src/functions/updateForm/serverless.yml)}
+  - ${file(./src/functions/deleteForm/serverless.yml)}
+
+package:
+  individually: true
+  patterns:
+    - "!**/**" # quotes needed
+
+resources:
+  Resources:
+    FormsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.formsTableName}
+        AttributeDefinitions:
+          - AttributeName: formId
+            AttributeType: S
+          - AttributeName: ownerId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: formId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: OwnerIdIndex
+            KeySchema:
+              - AttributeName: ownerId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: "ALL"
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

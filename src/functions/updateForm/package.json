@@ -1,0 +1,8 @@
+{
+  "name": "update-form-lambda",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "description": "lambda function to update form",
+  "author": "Denish Patel"
+}

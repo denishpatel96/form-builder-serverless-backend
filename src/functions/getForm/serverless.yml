@@ -1,0 +1,20 @@
+getForm:
+  handler: dist/getForm/index.handler
+  package:
+    # path: "dist/getForm/"
+    patterns:
+      - "dist/getForm/**"
+      - "!dist/getForm/**/*.ts"
+      - "!dist/getForm/**/*.yml"
+  name: get-form
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: forms/{formId}
+        method: GET
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt FormsTable.Arn

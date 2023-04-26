@@ -1,0 +1,7 @@
+{
+  "name": "get-forms",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to get forms",
+  "author": "Denish Patel"
+}
