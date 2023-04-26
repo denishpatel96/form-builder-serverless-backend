@@ -16,7 +16,6 @@ provider:
 
 plugins:
   - serverless-iam-roles-per-function
-  - serverless-dynamodb-local
   - serverless-offline
 
 custom:

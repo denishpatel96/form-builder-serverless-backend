@@ -27,7 +27,6 @@
     "rimraf": "^5.0.0",
     "serverless": "^3.30.1",
     "serverless-custom-packaging-plugin": "^0.1.2",
-    "serverless-dynamodb-local": "^0.2.40",
     "serverless-iam-roles-per-function": "^3.2.0",
     "serverless-offline": "^12.0.4",
     "ts-jest": "^29.1.0",
@@ -37,7 +36,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.316.0",
-    "@aws-sdk/util-dynamodb": "^3.316.0",
-    "uuid": "^9.0.0"
+    "@aws-sdk/util-dynamodb": "^3.316.0"
   }
 }
