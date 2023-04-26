@@ -6,7 +6,7 @@ createForm:
       - "dist/createForm/**"
       - "!dist/createForm/**/*.ts"
       - "!dist/createForm/**/*.yml"
-  name: create-form
+  name: create-form-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:

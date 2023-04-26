@@ -6,7 +6,7 @@ getForm:
       - "dist/getForm/**"
       - "!dist/getForm/**/*.ts"
       - "!dist/getForm/**/*.yml"
-  name: get-form
+  name: get-form-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:

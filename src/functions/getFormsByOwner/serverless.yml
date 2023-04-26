@@ -6,7 +6,7 @@ getFormsByOwner:
       - "dist/getFormsByOwner/**"
       - "!dist/getFormsByOwner/**/*.ts"
       - "!dist/getFormsByOwner/**/*.yml"
-  name: get-forms-by-owner
+  name: get-forms-by-owner-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:

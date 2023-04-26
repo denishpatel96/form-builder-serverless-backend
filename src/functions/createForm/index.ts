@@ -11,7 +11,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const dateString = new Date().toISOString();
     const formData = {
       ...body,
-      id: v4(),
+      formId: v4(),
       createdAt: dateString,
       updatedAt: dateString,
     };

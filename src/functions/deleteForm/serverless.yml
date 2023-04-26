@@ -6,7 +6,7 @@ deleteForm:
       - "dist/deleteForm/**"
       - "!dist/deleteForm/**/*.ts"
       - "!dist/deleteForm/**/*.yml"
-  name: delete-form
+  name: delete-form-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
