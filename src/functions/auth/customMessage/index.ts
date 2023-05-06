@@ -4,11 +4,10 @@ import { CustomMessageTriggerHandler } from "aws-lambda";
 export const handler: CustomMessageTriggerHandler = async (event) => {
   try {
     console.log("EVENT:", event);
-    let { given_name: firstName } = event.request.userAttributes;
+    let { email, given_name: firstName } = event.request.userAttributes;
 
     if (event.triggerSource === "CustomMessage_SignUp") {
       const code = event.request.codeParameter;
-      const email = event.request.usernameParameter;
       const url = process.env.STAGE === "prod" ? "https://vtwinforms.com" : "http://localhost:3000";
       const link = url + `/verify-email?code=${code}&email=${email}`;
       const dirPath = process.env.LAMBDA_TASK_ROOT
