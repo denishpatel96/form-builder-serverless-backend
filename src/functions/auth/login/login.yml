@@ -1,0 +1,20 @@
+login:
+  handler: ./dist/auth/login/index.handler
+  package:
+    patterns:
+      - "dist/auth/login/**"
+      - "!dist/auth/login/**/*.ts"
+      - "!dist/auth/login/**/*.yml"
+  name: login-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: auth/login
+        method: POST
+        cors: true
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "cognito-idp:InitiateAuth"
+      Resource: !GetAtt CognitoUserPool.Arn

@@ -5,39 +5,23 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
-const db = new DynamoDBClient({ region: process.env.REGION });
 
 export const handler: APIGatewayProxyHandler = async (event) => {
+  const db = new DynamoDBClient({ region: process.env.REGION });
+
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { formId, ...fieldsToUpdate } = body;
-    if (!formId) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: "[Bad Request] No form id provided",
-        }),
-      };
-    }
+    const { userSub: userId } = body;
+    console.log("body", body);
 
-    const formData = {
-      ...fieldsToUpdate,
-      updatedAt: new Date().toISOString(),
-    };
-    const objKeys = Object.keys(formData);
+    // Make entry in db
+    const dateString = new Date().toISOString();
+    const userData = { emailVerified: true, updatedAt: dateString };
+    const objKeys = Object.keys(userData);
 
-    if (!formId) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: "[Bad Request] No form id provided",
-        }),
-      };
-    }
-
-    const params: UpdateItemCommandInput = {
-      TableName: process.env.FORMS_TABLE,
-      Key: marshall({ formId }),
+    const updateUserParams: UpdateItemCommandInput = {
+      TableName: process.env.USERS_TABLE,
+      Key: marshall({ id: userId }),
       UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`)}`,
       ExpressionAttributeNames: objKeys.reduce(
         (acc, key, index) => ({ ...acc, [`#key${index}`]: key }),
@@ -47,18 +31,18 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         objKeys.reduce(
           (acc, key, index) => ({
             ...acc,
-            [`:value${index}`]: formData[key],
+            [`:value${index}`]: userData[key],
           }),
           {}
         )
       ),
     };
-    await db.send(new UpdateItemCommand(params));
+    await db.send(new UpdateItemCommand(updateUserParams));
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Successfully updated form",
+        message: "Successfully updated user email verification status",
       }),
     };
   } catch (e) {
@@ -66,7 +50,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 500,
       body: JSON.stringify({
-        message: "[Internal Server Error] Failed to update form",
+        message: "[Internal Server Error] Failed to update email verification status",
         error: { message: e.message, stack: e.stack },
       }),
     };

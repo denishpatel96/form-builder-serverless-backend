@@ -1,4 +1,4 @@
-service: izzy-forms
+service: form-builder-api
 frameworkVersion: "3"
 
 provider:
@@ -11,22 +11,39 @@ provider:
     minimumCompressionSize: 1024
     shouldStartNameWithService: true
   environment:
+    STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
     FORMS_TABLE: ${self:custom.formsTableName}
+    USERS_TABLE: ${self:custom.usersTableName}
+    USER_POOL_ID: !Ref CognitoUserPool
+    USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
 
 plugins:
   - serverless-iam-roles-per-function
   - serverless-offline
 
 custom:
+  # dynamodb tables
   formsTableName: forms-table-${self:provider.stage}
+  usersTableName: users-table-${self:provider.stage}
+  # cognito user pool
+  userPoolName: user-pool-${self:provider.stage}
+  # cognito user pool client
+  userPoolClientName: user-pool-client-${self:provider.stage}
+  # cognito identity pool
+  identityPoolName: identity-pool-${self:provider.stage}
 
 functions:
-  - ${file(./src/functions/createForm/serverless.yml)}
-  - ${file(./src/functions/getFormsByOwner/serverless.yml)}
-  - ${file(./src/functions/getForm/serverless.yml)}
-  - ${file(./src/functions/updateForm/serverless.yml)}
-  - ${file(./src/functions/deleteForm/serverless.yml)}
+  - ${file(./src/functions/form/createForm/createForm.yml)}
+  - ${file(./src/functions/form/getFormsByOwner/getFormsByOwner.yml)}
+  - ${file(./src/functions/form/getForm/getForm.yml)}
+  - ${file(./src/functions/form/updateForm/updateForm.yml)}
+  - ${file(./src/functions/form/deleteForm/deleteForm.yml)}
+  - ${file(./src/functions/auth/confirmSignup/confirmSignup.yml)}
+  - ${file(./src/functions/auth/customMessage/customMessage.yml)}
+  - ${file(./src/functions/auth/login/login.yml)}
+  - ${file(./src/functions/auth/postConfirmation/postConfirmation.yml)}
+  - ${file(./src/functions/auth/signup/signup.yml)}
 
 package:
   individually: true
@@ -34,33 +51,11 @@ package:
     - "!**/**" # quotes needed
 
 resources:
-  Resources:
-    FormsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.formsTableName}
-        AttributeDefinitions:
-          - AttributeName: formId
-            AttributeType: S
-          - AttributeName: ownerId
-            AttributeType: S
-          - AttributeName: createdAt
-            AttributeType: S
-        KeySchema:
-          - AttributeName: formId
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: OwnerIdIndex
-            KeySchema:
-              - AttributeName: ownerId
-                KeyType: HASH
-              - AttributeName: createdAt
-                KeyType: RANGE
-            Projection:
-              ProjectionType: "ALL"
-            ProvisionedThroughput:
-              ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+  - ${file(./src/resources/dynamodb/formsTable.yml)}
+  - ${file(./src/resources/dynamodb/usersTable.yml)}
+  - ${file(./src/resources/cognito/cognitoUserPool.yml)}
+  - ${file(./src/resources/cognito/cognitoUserPoolClient.yml)}
+  - ${file(./src/resources/cognito/cognitoIdentityPool.yml)}
+  - ${file(./src/resources/cognito/cognitoIdentityPoolRoleAttachment.yml)}
+  - ${file(./src/resources/cognito/cognitoAuthRole.yml)}
+  - ${file(./src/resources/cognito/cognitoUnauthRole.yml)}

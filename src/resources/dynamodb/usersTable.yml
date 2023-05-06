@@ -1,0 +1,69 @@
+Resources:
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.usersTableName}
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: firstName
+          AttributeType: S
+        - AttributeName: lastName
+          AttributeType: S
+        - AttributeName: ownerId
+          AttributeType: S
+        - AttributeName: role
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: OwnerIdIndex
+          KeySchema:
+            - AttributeName: ownerId
+              KeyType: HASH
+            - AttributeName: firstName
+              KeyType: RANGE
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: RoleIndex
+          KeySchema:
+            - AttributeName: role
+              KeyType: HASH
+            - AttributeName: firstName
+              KeyType: RANGE
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: EmailIndex
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+            - AttributeName: firstName
+              KeyType: RANGE
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: FirstNameIndex
+          KeySchema:
+            - AttributeName: firstName
+              KeyType: HASH
+            - AttributeName: lastName
+              KeyType: RANGE
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1

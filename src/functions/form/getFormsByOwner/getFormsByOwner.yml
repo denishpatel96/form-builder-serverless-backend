@@ -1,0 +1,33 @@
+getFormsByOwner:
+  handler: dist/form/getFormsByOwner/index.handler
+  package:
+    patterns:
+      - "dist/form/getFormsByOwner/**"
+      - "!dist/form/getFormsByOwner/**/*.ts"
+      - "!dist/form/getFormsByOwner/**/*.yml"
+  name: get-forms-by-owner-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: forms
+        method: GET
+        cors: true
+        authorizer:
+          name: cognitoUserAuthorizer
+          type: COGNITO_USER_POOLS
+          arn:
+            Fn::GetAtt:
+              - CognitoUserPool
+              - Arn
+          claims:
+            - email
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+      Resource:
+        Fn::Join:
+          - ""
+          - - Fn::GetAtt: FormsTable.Arn
+            - "/index/OwnerIdIndex"

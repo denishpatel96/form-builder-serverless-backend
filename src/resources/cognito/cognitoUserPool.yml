@@ -1,0 +1,38 @@
+# Cognito - User pool
+Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: ${self:custom.userPoolName}
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes:
+        - email
+      DeletionProtection: INACTIVE
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+        DeviceOnlyRememberedOnUserPrompt: true
+      EmailConfiguration:
+        EmailSendingAccount: DEVELOPER
+        SourceArn: arn:aws:ses:us-west-2:954569320321:identity/vtwinforms.com
+        From: vTwin Forms <denish@vtwinforms.com>
+        ReplyToEmailAddress: denish@vtwinforms.com
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 30
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate:
+          - email

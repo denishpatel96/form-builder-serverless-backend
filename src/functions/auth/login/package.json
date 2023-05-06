@@ -1,0 +1,7 @@
+{
+  "name": "login",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to login user",
+  "author": "Denish Patel"
+}

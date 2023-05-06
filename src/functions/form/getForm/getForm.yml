@@ -1,0 +1,29 @@
+getForm:
+  handler: dist/form/getForm/index.handler
+  package:
+    patterns:
+      - "dist/form/getForm/**"
+      - "!dist/form/getForm/**/*.ts"
+      - "!dist/form/getForm/**/*.yml"
+  name: get-form-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: forms/{formId}
+        method: GET
+        cors: true
+        authorizer:
+          name: cognitoUserAuthorizer
+          type: COGNITO_USER_POOLS
+          arn:
+            Fn::GetAtt:
+              - CognitoUserPool
+              - Arn
+          claims:
+            - email
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt FormsTable.Arn

@@ -11,7 +11,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const dateString = new Date().toISOString();
     const formData = {
       ...body,
-      formId: v4(),
+      id: v4(),
       createdAt: dateString,
       updatedAt: dateString,
     };
@@ -20,13 +20,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       TableName: process.env.FORMS_TABLE,
       Item: marshall(formData),
     };
-    const createResult = await db.send(new PutItemCommand(params));
+    await db.send(new PutItemCommand(params));
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Successfully created form",
-        data: createResult,
       }),
     };
   } catch (e) {

@@ -1,0 +1,7 @@
+{
+  "name": "custom-message",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function triggered before cognito send email or phone verification message or mfa code",
+  "author": "Denish Patel"
+}

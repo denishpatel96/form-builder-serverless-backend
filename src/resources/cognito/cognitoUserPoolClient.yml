@@ -1,0 +1,16 @@
+# Cognito - Client
+Resources:
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: ${self:custom.userPoolClientName}
+      UserPoolId:
+        Ref: CognitoUserPool
+      AccessTokenValidity: 5
+      IdTokenValidity: 5
+      ExplicitAuthFlows:
+        - "ALLOW_USER_PASSWORD_AUTH"
+        - "ALLOW_REFRESH_TOKEN_AUTH"
+        - "ALLOW_CUSTOM_AUTH"
+      GenerateSecret: false
+      RefreshTokenValidity: 30
