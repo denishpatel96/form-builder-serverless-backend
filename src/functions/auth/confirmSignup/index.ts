@@ -11,7 +11,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
     const { email, code } = body;
-    console.log("body : ", body);
+    if (!(email && code)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: "[Bad Request] email and verification code required",
+        }),
+      };
+    }
 
     const params: ConfirmSignUpCommandInput = {
       ClientId: process.env.USER_POOL_CLIENT_ID,

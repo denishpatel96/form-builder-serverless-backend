@@ -18,8 +18,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       return {
         statusCode: 400,
         body: JSON.stringify({
-          message:
-            "[Bad Request] Missing one or more from : first name, last name, email, password",
+          message: "[Bad Request] first name, last name, email and password required",
         }),
       };
     }
