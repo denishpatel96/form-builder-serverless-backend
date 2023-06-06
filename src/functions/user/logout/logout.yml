@@ -1,17 +1,17 @@
-updateForm:
-  handler: dist/form/updateForm/index.handler
+logout:
+  handler: ./dist/user/logout/index.handler
   package:
     patterns:
-      - "dist/form/updateForm/**"
-      - "!dist/form/updateForm/**/*.ts"
-      - "!dist/form/updateForm/**/*.yml"
-  name: update-form-${self:provider.stage}
+      - "dist/user/logout/**"
+      - "!dist/user/logout/**/*.ts"
+      - "!dist/user/logout/**/*.yml"
+  name: logout-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
     - http:
-        path: forms/{formId}
-        method: PUT
+        path: user/logout
+        method: POST
         cors: true
         authorizer:
           name: cognitoUserAuthorizer
@@ -25,5 +25,5 @@ updateForm:
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - "dynamodb:UpdateItem"
-      Resource: !GetAtt FormsTable.Arn
+        - "cognito-idp:RevokeToken"
+      Resource: !GetAtt CognitoUserPool.Arn

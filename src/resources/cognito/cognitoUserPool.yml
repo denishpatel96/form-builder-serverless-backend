@@ -13,13 +13,10 @@ Resources:
       AutoVerifiedAttributes:
         - email
       DeletionProtection: INACTIVE
-      DeviceConfiguration:
-        ChallengeRequiredOnNewDevice: true
-        DeviceOnlyRememberedOnUserPrompt: true
       EmailConfiguration:
         EmailSendingAccount: DEVELOPER
         SourceArn: arn:aws:ses:us-west-2:954569320321:identity/vtwinforms.com
-        From: vTwin Forms <denish@vtwinforms.com>
+        From: vTwinForms <denish@vtwinforms.com>
         ReplyToEmailAddress: denish@vtwinforms.com
       Policies:
         PasswordPolicy:

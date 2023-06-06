@@ -1,16 +1,16 @@
 confirmSignup:
-  handler: ./dist/auth/confirmSignup/index.handler
+  handler: ./dist/user/confirmSignup/index.handler
   package:
     patterns:
-      - "dist/auth/confirmSignup/**"
-      - "!dist/auth/confirmSignup/**/*.ts"
-      - "!dist/auth/confirmSignup/**/*.yml"
+      - "dist/user/confirmSignup/**"
+      - "!dist/user/confirmSignup/**/*.ts"
+      - "!dist/user/confirmSignup/**/*.yml"
   name: confirm-signup-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
     - http:
-        path: auth/confirmSignup
+        path: user/confirmSignup
         method: POST
         cors: true
   iamRoleStatements:

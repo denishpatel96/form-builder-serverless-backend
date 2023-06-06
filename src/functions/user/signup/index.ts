@@ -10,22 +10,29 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 export const handler: APIGatewayProxyHandler = async (event) => {
   const db = new DynamoDBClient({ region: process.env.REGION });
   const client = new CognitoIdentityProviderClient({ region: process.env.REGION });
+  const corsHeaders = {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": true,
+    },
+  };
 
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { firstName, lastName, role, ownerId, email, password } = body;
+    const { firstName, lastName, email, password } = body;
     if (!(firstName && lastName && email && password)) {
       return {
         statusCode: 400,
+        ...corsHeaders,
         body: JSON.stringify({
-          message: "[Bad Request] first name, last name, email and password required",
+          success: false,
+          error: { message: "first name, last name, email and password required" },
         }),
       };
     }
 
     const signupParams: SignUpCommandInput = {
       ClientId: process.env.USER_POOL_CLIENT_ID,
-      ClientMetadata: { firstName, lastName, role, ownerId },
       Username: email,
       Password: password,
       UserAttributes: [
@@ -42,8 +49,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const userData = {
       firstName,
       lastName,
-      role: role,
-      ownerId: ownerId,
       email,
       id: userId,
       emailVerified: false,
@@ -59,17 +64,20 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     return {
       statusCode: 200,
+      ...corsHeaders,
       body: JSON.stringify({
-        message: "Successfully registered user",
+        success: true,
+        data: userData,
       }),
     };
   } catch (e) {
     console.error(e);
     return {
-      statusCode: 500,
+      statusCode: e?.$metadata?.httpStatusCode || 500,
+      ...corsHeaders,
       body: JSON.stringify({
-        message: "[Internal Server Error] Failed to register user",
-        error: { message: e.message, stack: e.stack },
+        success: false,
+        error: { name: e.name, message: e.message, stack: e.stack },
       }),
     };
   }

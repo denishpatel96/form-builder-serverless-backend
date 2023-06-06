@@ -1,16 +1,16 @@
 signup:
-  handler: ./dist/auth/signup/index.handler
+  handler: ./dist/user/signup/index.handler
   package:
     patterns:
-      - "dist/auth/signup/**"
-      - "!dist/auth/signup/**/*.ts"
-      - "!dist/auth/signup/**/*.yml"
+      - "dist/user/signup/**"
+      - "!dist/user/signup/**/*.ts"
+      - "!dist/user/signup/**/*.yml"
   name: signup-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
     - http:
-        path: auth/signup
+        path: user/signup
         method: POST
         cors: true
   iamRoleStatements:

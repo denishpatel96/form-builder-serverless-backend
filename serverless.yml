@@ -39,11 +39,16 @@ functions:
   - ${file(./src/functions/form/getForm/getForm.yml)}
   - ${file(./src/functions/form/updateForm/updateForm.yml)}
   - ${file(./src/functions/form/deleteForm/deleteForm.yml)}
-  - ${file(./src/functions/auth/confirmSignup/confirmSignup.yml)}
-  - ${file(./src/functions/auth/customMessage/customMessage.yml)}
-  - ${file(./src/functions/auth/login/login.yml)}
-  - ${file(./src/functions/auth/postConfirmation/postConfirmation.yml)}
-  - ${file(./src/functions/auth/signup/signup.yml)}
+  - ${file(./src/functions/user/authenticate/authenticate.yml)}
+  - ${file(./src/functions/user/changePassword/changePassword.yml)}
+  - ${file(./src/functions/user/confirmForgotPassword/confirmForgotPassword.yml)}
+  - ${file(./src/functions/user/confirmSignup/confirmSignup.yml)}
+  - ${file(./src/functions/user/customMessage/customMessage.yml)}
+  - ${file(./src/functions/user/forgotPassword/forgotPassword.yml)}
+  - ${file(./src/functions/user/logout/logout.yml)}
+  - ${file(./src/functions/user/postConfirmation/postConfirmation.yml)}
+  - ${file(./src/functions/user/resendCode/resendCode.yml)}
+  - ${file(./src/functions/user/signup/signup.yml)}
 
 package:
   individually: true

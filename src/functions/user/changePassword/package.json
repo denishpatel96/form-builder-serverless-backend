@@ -1,0 +1,7 @@
+{
+  "name": "change-password",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to change password using exising password.",
+  "author": "Denish Patel"
+}

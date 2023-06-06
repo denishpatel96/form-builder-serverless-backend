@@ -10,12 +10,14 @@ const db = new DynamoDBClient({ region: process.env.REGION });
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const formId = event.pathParameters?.formId;
+    const userId = event.requestContext.authorizer?.claims.sub;
 
     if (!formId) {
       return {
         statusCode: 400,
         body: JSON.stringify({
-          message: "[Bad Request] No form id provided",
+          success: false,
+          error: { message: "formId required as path parameter" },
         }),
       };
     }
@@ -23,22 +25,24 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const params: DeleteItemCommandInput = {
       TableName: process.env.FORMS_TABLE,
       Key: marshall({ id: formId }),
+      ExpressionAttributeValues: marshall({ ":userId": userId }),
+      ConditionExpression: "ownerId = :userId",
     };
     await db.send(new DeleteItemCommand(params));
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Successfully deleted form",
+        success: true,
       }),
     };
   } catch (e) {
     console.error(e);
     return {
-      statusCode: 500,
+      statusCode: e?.$metadata?.httpStatusCode || 500,
       body: JSON.stringify({
-        message: "[Internal Server Error] Failed to delete form",
-        error: { message: e.message, stack: e.stack },
+        success: false,
+        error: { name: e.name, message: e.message, stack: e.stack },
       }),
     };
   }

@@ -10,38 +10,12 @@ Resources:
           AttributeType: S
         - AttributeName: lastName
           AttributeType: S
-        - AttributeName: ownerId
-          AttributeType: S
-        - AttributeName: role
-          AttributeType: S
         - AttributeName: email
           AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: OwnerIdIndex
-          KeySchema:
-            - AttributeName: ownerId
-              KeyType: HASH
-            - AttributeName: firstName
-              KeyType: RANGE
-          Projection:
-            ProjectionType: "ALL"
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
-        - IndexName: RoleIndex
-          KeySchema:
-            - AttributeName: role
-              KeyType: HASH
-            - AttributeName: firstName
-              KeyType: RANGE
-          Projection:
-            ProjectionType: "ALL"
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
         - IndexName: EmailIndex
           KeySchema:
             - AttributeName: email

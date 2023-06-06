@@ -10,30 +10,26 @@ const db = new DynamoDBClient({ region: process.env.REGION });
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { formId, ...fieldsToUpdate } = body;
+    const { formId: id, ownerId, ...fieldsToUpdate } = body;
+
+    const formId = event.pathParameters?.formId;
     if (!formId) {
       return {
         statusCode: 400,
         body: JSON.stringify({
-          message: "[Bad Request] No form id provided",
+          success: false,
+          error: { message: "formId required as query parameter" },
         }),
       };
     }
+
+    const userId = event.requestContext.authorizer?.claims.sub;
 
     const formData = {
       ...fieldsToUpdate,
       updatedAt: new Date().toISOString(),
     };
     const objKeys = Object.keys(formData);
-
-    if (!formId) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: "[Bad Request] No form id provided",
-        }),
-      };
-    }
 
     const params: UpdateItemCommandInput = {
       TableName: process.env.FORMS_TABLE,
@@ -49,25 +45,27 @@ export const handler: APIGatewayProxyHandler = async (event) => {
             ...acc,
             [`:value${index}`]: formData[key],
           }),
-          {}
+          { ":userId": userId }
         )
       ),
+      ConditionExpression: "ownerId = :userId",
     };
+
     await db.send(new UpdateItemCommand(params));
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Successfully updated form",
+        success: true,
       }),
     };
   } catch (e) {
     console.error(e);
     return {
-      statusCode: 500,
+      statusCode: e?.$metadata?.httpStatusCode || 500,
       body: JSON.stringify({
-        message: "[Internal Server Error] Failed to update form",
-        error: { message: e.message, stack: e.stack },
+        success: false,
+        error: { name: e.name, message: e.message, stack: e.stack },
       }),
     };
   }

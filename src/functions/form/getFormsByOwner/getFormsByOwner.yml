@@ -21,7 +21,7 @@ getFormsByOwner:
               - CognitoUserPool
               - Arn
           claims:
-            - email
+            - sub
   iamRoleStatements:
     - Effect: Allow
       Action:

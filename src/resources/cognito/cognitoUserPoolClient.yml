@@ -6,8 +6,8 @@ Resources:
       ClientName: ${self:custom.userPoolClientName}
       UserPoolId:
         Ref: CognitoUserPool
-      AccessTokenValidity: 5
-      IdTokenValidity: 5
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
       ExplicitAuthFlows:
         - "ALLOW_USER_PASSWORD_AUTH"
         - "ALLOW_REFRESH_TOKEN_AUTH"

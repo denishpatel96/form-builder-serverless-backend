@@ -1,16 +1,16 @@
-login:
-  handler: ./dist/auth/login/index.handler
+authenticate:
+  handler: ./dist/user/authenticate/index.handler
   package:
     patterns:
-      - "dist/auth/login/**"
-      - "!dist/auth/login/**/*.ts"
-      - "!dist/auth/login/**/*.yml"
-  name: login-${self:provider.stage}
+      - "dist/user/authenticate/**"
+      - "!dist/user/authenticate/**/*.ts"
+      - "!dist/user/authenticate/**/*.yml"
+  name: authenticate-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
     - http:
-        path: auth/login
+        path: user/authenticate
         method: POST
         cors: true
   iamRoleStatements:

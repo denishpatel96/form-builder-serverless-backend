@@ -8,10 +8,12 @@ const db = new DynamoDBClient({ region: process.env.REGION });
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
+    const ownerId = event.requestContext.authorizer?.claims.sub;
     const dateString = new Date().toISOString();
     const formData = {
       ...body,
       id: v4(),
+      ownerId,
       createdAt: dateString,
       updatedAt: dateString,
     };
@@ -25,16 +27,17 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Successfully created form",
+        success: true,
+        data: formData,
       }),
     };
   } catch (e) {
     console.error(e);
     return {
-      statusCode: 500,
+      statusCode: e?.$metadata?.httpStatusCode || 500,
       body: JSON.stringify({
-        message: "[Internal Server Error] Failed to create form",
-        error: { message: e.message, stack: e.stack },
+        success: false,
+        error: { name: e.name, message: e.message, stack: e.stack },
       }),
     };
   }

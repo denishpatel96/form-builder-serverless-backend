@@ -6,12 +6,14 @@ const db = new DynamoDBClient({ region: process.env.REGION });
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const formId = event.pathParameters?.formId;
+    const userId = event.requestContext.authorizer?.claims.sub;
 
     if (!formId) {
       return {
         statusCode: 400,
         body: JSON.stringify({
-          message: "[Bad Request] No form id provided",
+          success: false,
+          error: { message: "formId required as path parameter" },
         }),
       };
     }
@@ -22,29 +24,31 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     };
     const { Item } = await db.send(new GetItemCommand(params));
 
-    console.log({ Item });
-
+    // If form belongs to someone else or not found at all, return NOT FOUND.
+    const formData = Item ? unmarshall(Item) : {};
+    if (!Item || formData.ownerId !== userId) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          success: false,
+          error: { message: "No form found with provided formId" },
+        }),
+      };
+    }
     return {
       statusCode: 200,
-      body: JSON.stringify(
-        Item
-          ? {
-              message: "Successfully retrieved form",
-              data: unmarshall(Item),
-            }
-          : {
-              message: `No form found with provided id : ${formId} `,
-              data: {},
-            }
-      ),
+      body: JSON.stringify({
+        success: true,
+        data: formData,
+      }),
     };
   } catch (e) {
     console.error(e);
     return {
-      statusCode: 500,
+      statusCode: e?.$metadata?.httpStatusCode || 500,
       body: JSON.stringify({
-        message: "[Internal Server Error] Failed to get form",
-        error: { message: e.message, stack: e.stack },
+        success: false,
+        error: { name: e.name, message: e.message, stack: e.stack },
       }),
     };
   }

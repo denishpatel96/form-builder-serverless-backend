@@ -1,0 +1,7 @@
+{
+  "name": "authenticate",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to authenticate user",
+  "author": "Denish Patel"
+}

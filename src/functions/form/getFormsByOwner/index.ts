@@ -5,17 +5,7 @@ const db = new DynamoDBClient({ region: process.env.REGION });
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
-    const ownerId = event.queryStringParameters?.ownerId;
-
-    if (!ownerId) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: "[Bad Request] No ownerId provided as query parameter",
-        }),
-      };
-    }
-
+    const ownerId = event.requestContext.authorizer?.claims.sub;
     const limit: number = event.queryStringParameters?.limit
       ? +event.queryStringParameters.limit
       : 100;
@@ -33,17 +23,17 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Successfully retrieved form",
+        success: true,
         data: Items?.map((i) => unmarshall(i)),
       }),
     };
   } catch (e) {
     console.error(e);
     return {
-      statusCode: 500,
+      statusCode: e?.$metadata?.httpStatusCode || 500,
       body: JSON.stringify({
-        message: "[Internal Server Error] Failed to get forms",
-        error: { message: e.message, stack: e.stack },
+        success: false,
+        error: { name: e.name, message: e.message, stack: e.stack },
       }),
     };
   }

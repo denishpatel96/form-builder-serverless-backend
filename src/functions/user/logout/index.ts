@@ -1,45 +1,53 @@
 import {
-  ConfirmSignUpCommand,
   CognitoIdentityProviderClient,
-  ConfirmSignUpCommandInput,
+  RevokeTokenCommand,
+  RevokeTokenCommandInput,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { APIGatewayProxyHandler } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const client = new CognitoIdentityProviderClient({ region: process.env.REGION });
-
+  const corsHeaders = {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": true,
+    },
+  };
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { email, code } = body;
-    if (!(email && code)) {
+    const { token } = body;
+    if (!token) {
       return {
         statusCode: 400,
+        ...corsHeaders,
         body: JSON.stringify({
-          message: "[Bad Request] email and verification code required",
+          success: false,
+          error: { message: "token required" },
         }),
       };
     }
 
-    const params: ConfirmSignUpCommandInput = {
+    const params: RevokeTokenCommandInput = {
       ClientId: process.env.USER_POOL_CLIENT_ID,
-      Username: email,
-      ConfirmationCode: code,
+      Token: token,
     };
-    await client.send(new ConfirmSignUpCommand(params));
+    await client.send(new RevokeTokenCommand(params));
 
     return {
       statusCode: 200,
+      ...corsHeaders,
       body: JSON.stringify({
-        message: "Successfully confirmed user email",
+        success: true,
       }),
     };
   } catch (e) {
     console.error(e);
     return {
-      statusCode: 500,
+      statusCode: e?.$metadata?.httpStatusCode || 500,
+      ...corsHeaders,
       body: JSON.stringify({
-        message: "[Internal Server Error] Failed to confirm user email",
-        error: { message: e.message, stack: e.stack },
+        success: false,
+        error: { name: e.name, message: e.message, stack: e.stack },
       }),
     };
   }
