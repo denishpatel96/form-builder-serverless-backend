@@ -1,0 +1,16 @@
+customMessage:
+  handler: ./dist/auth/customMessage/index.handler
+  package:
+    patterns:
+      - "dist/auth/customMessage/**"
+      - "!dist/auth/customMessage/**/*.ts"
+      - "!dist/auth/customMessage/**/*.yml"
+  name: custom-message-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - cognitoUserPool:
+        pool: ${self:custom.userPoolName}
+        trigger: CustomMessage
+        existing: true
+        forceDeploy: true

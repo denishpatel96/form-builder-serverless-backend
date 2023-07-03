@@ -1,0 +1,20 @@
+confirmSignup:
+  handler: ./dist/auth/confirmSignup/index.handler
+  package:
+    patterns:
+      - "dist/auth/confirmSignup/**"
+      - "!dist/auth/confirmSignup/**/*.ts"
+      - "!dist/auth/confirmSignup/**/*.yml"
+  name: confirm-signup-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: auth/confirmSignup
+        method: POST
+        cors: true
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "cognito-idp:ConfirmSignUp"
+      Resource: !GetAtt CognitoUserPool.Arn

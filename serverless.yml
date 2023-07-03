@@ -13,8 +13,7 @@ provider:
   environment:
     STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
-    FORMS_TABLE: ${self:custom.formsTableName}
-    USERS_TABLE: ${self:custom.usersTableName}
+    FORM_BUILDER_DATA_TABLE: ${self:custom.formBuilderDataTableName}
     USER_POOL_ID: !Ref CognitoUserPool
     USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
 
@@ -23,9 +22,8 @@ plugins:
   - serverless-offline
 
 custom:
-  # dynamodb tables
-  formsTableName: forms-table-${self:provider.stage}
-  usersTableName: users-table-${self:provider.stage}
+  # dynamodb table
+  formBuilderDataTableName: form-builder-data-${self:provider.stage}
   # cognito user pool
   userPoolName: user-pool-${self:provider.stage}
   # cognito user pool client
@@ -34,21 +32,17 @@ custom:
   identityPoolName: identity-pool-${self:provider.stage}
 
 functions:
-  - ${file(./src/functions/form/createForm/createForm.yml)}
-  - ${file(./src/functions/form/getFormsByOwner/getFormsByOwner.yml)}
-  - ${file(./src/functions/form/getForm/getForm.yml)}
-  - ${file(./src/functions/form/updateForm/updateForm.yml)}
-  - ${file(./src/functions/form/deleteForm/deleteForm.yml)}
-  - ${file(./src/functions/user/authenticate/authenticate.yml)}
-  - ${file(./src/functions/user/changePassword/changePassword.yml)}
-  - ${file(./src/functions/user/confirmForgotPassword/confirmForgotPassword.yml)}
-  - ${file(./src/functions/user/confirmSignup/confirmSignup.yml)}
-  - ${file(./src/functions/user/customMessage/customMessage.yml)}
-  - ${file(./src/functions/user/forgotPassword/forgotPassword.yml)}
-  - ${file(./src/functions/user/logout/logout.yml)}
-  - ${file(./src/functions/user/postConfirmation/postConfirmation.yml)}
-  - ${file(./src/functions/user/resendCode/resendCode.yml)}
-  - ${file(./src/functions/user/signup/signup.yml)}
+  - ${file(./src/functions/user/getUser/getUser.yml)}
+  - ${file(./src/functions/auth/authenticate/authenticate.yml)}
+  - ${file(./src/functions/auth/changePassword/changePassword.yml)}
+  - ${file(./src/functions/auth/confirmForgotPassword/confirmForgotPassword.yml)}
+  - ${file(./src/functions/auth/confirmSignup/confirmSignup.yml)}
+  - ${file(./src/functions/auth/customMessage/customMessage.yml)}
+  - ${file(./src/functions/auth/forgotPassword/forgotPassword.yml)}
+  - ${file(./src/functions/auth/logout/logout.yml)}
+  - ${file(./src/functions/auth/postConfirmation/postConfirmation.yml)}
+  - ${file(./src/functions/auth/resendCode/resendCode.yml)}
+  - ${file(./src/functions/auth/signup/signup.yml)}
 
 package:
   individually: true
@@ -56,11 +50,163 @@ package:
     - "!**/**" # quotes needed
 
 resources:
-  - ${file(./src/resources/dynamodb/formsTable.yml)}
-  - ${file(./src/resources/dynamodb/usersTable.yml)}
-  - ${file(./src/resources/cognito/cognitoUserPool.yml)}
-  - ${file(./src/resources/cognito/cognitoUserPoolClient.yml)}
-  - ${file(./src/resources/cognito/cognitoIdentityPool.yml)}
-  - ${file(./src/resources/cognito/cognitoIdentityPoolRoleAttachment.yml)}
-  - ${file(./src/resources/cognito/cognitoAuthRole.yml)}
-  - ${file(./src/resources/cognito/cognitoUnauthRole.yml)}
+  Resources:
+    FormBuilderDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+          - AttributeName: pk1
+            AttributeType: S
+          - AttributeName: sk1
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: GSI1
+            KeySchema:
+              - AttributeName: pk1
+                KeyType: HASH
+              - AttributeName: sk1
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.formBuilderDataTableName}
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:custom.userPoolName}
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        AdminCreateUserConfig:
+          AllowAdminCreateUserOnly: false
+        AutoVerifiedAttributes:
+          - email
+        DeletionProtection: INACTIVE
+        EmailConfiguration:
+          EmailSendingAccount: DEVELOPER
+          SourceArn: arn:aws:ses:us-west-2:954569320321:identity/vtwinforms.com
+          From: vTwinForms <denish@vtwinforms.com>
+          ReplyToEmailAddress: denish@vtwinforms.com
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+            RequireUppercase: true
+            TemporaryPasswordValidityDays: 30
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: true
+        UserAttributeUpdateSettings:
+          AttributesRequireVerificationBeforeUpdate:
+            - email
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:custom.userPoolClientName}
+        UserPoolId:
+          Ref: CognitoUserPool
+        AccessTokenValidity: 1
+        IdTokenValidity: 1
+        ExplicitAuthFlows:
+          - "ALLOW_USER_PASSWORD_AUTH"
+          - "ALLOW_REFRESH_TOKEN_AUTH"
+          - "ALLOW_CUSTOM_AUTH"
+        GenerateSecret: false
+        RefreshTokenValidity: 30
+    CognitoIdentityPool:
+      Type: AWS::Cognito::IdentityPool
+      Properties:
+        IdentityPoolName: ${self:custom.identityPoolName}
+        AllowUnauthenticatedIdentities: false
+        CognitoIdentityProviders:
+          - ClientId:
+              Ref: CognitoUserPoolClient
+            ProviderName:
+              Fn::GetAtt: [CognitoUserPool, ProviderName]
+    CognitoIdentityPoolRoles:
+      Type: AWS::Cognito::IdentityPoolRoleAttachment
+      Properties:
+        IdentityPoolId:
+          Ref: CognitoIdentityPool
+        Roles:
+          authenticated:
+            Fn::GetAtt: [CognitoAuthRole, Arn]
+          unauthenticated:
+            Fn::GetAtt: [CognitoUnauthRole, Arn]
+    CognitoAuthRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: appAuthRole
+        Path: /
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Federated: "cognito-identity.amazonaws.com"
+              Action:
+                - "sts:AssumeRoleWithWebIdentity"
+              Condition:
+                StringEquals:
+                  "cognito-identity.amazonaws.com:aud":
+                    Ref: CognitoIdentityPool
+                "ForAnyValue:StringLike":
+                  "cognito-identity.amazonaws.com:amr": authenticated
+        Policies:
+          - PolicyName: "CognitoAuthorizedPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "mobileanalytics:PutEvents"
+                    - "cognito-sync:*"
+                    - "cognito-identity:*"
+                  Resource: "*"
+                - Effect: "Allow"
+                  Action:
+                    - "execute-api:Invoke"
+                  Resource: "*"
+    CognitoUnauthRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: appUnauthRole
+        Path: /
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Federated: "cognito-identity.amazonaws.com"
+              Action:
+                - "sts:AssumeRoleWithWebIdentity"
+              Condition:
+                StringEquals:
+                  "cognito-identity.amazonaws.com:aud":
+                    Ref: CognitoIdentityPool
+                "ForAnyValue:StringLike":
+                  "cognito-identity.amazonaws.com:amr": unauthenticated
+        Policies:
+          - PolicyName: "CognitoUnauthorizedPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "mobileanalytics:PutEvents"
+                    - "cognito-sync:*"
+                    - "cognito-identity:*"
+                  Resource: "*"

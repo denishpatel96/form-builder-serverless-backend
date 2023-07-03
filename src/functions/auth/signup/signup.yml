@@ -1,0 +1,24 @@
+signup:
+  handler: ./dist/auth/signup/index.handler
+  package:
+    patterns:
+      - "dist/auth/signup/**"
+      - "!dist/auth/signup/**/*.ts"
+      - "!dist/auth/signup/**/*.yml"
+  name: signup-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: auth/signup
+        method: POST
+        cors: true
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:BatchWriteItem"
+      Resource: !GetAtt FormBuilderDataTable.Arn
+    - Effect: Allow
+      Action:
+        - "cognito-idp:SignUp"
+      Resource: !GetAtt CognitoUserPool.Arn

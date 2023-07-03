@@ -1,0 +1,10 @@
+{
+  "name": "signup",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to signup user",
+  "author": "Denish Patel",
+  "dependencies": {
+    "ulid": "^2.3.0"
+  }
+}

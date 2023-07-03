@@ -1,0 +1,29 @@
+getUser:
+  handler: dist/user/getUser/index.handler
+  package:
+    patterns:
+      - "dist/user/getUser/**"
+      - "!dist/user/getUser/**/*.ts"
+      - "!dist/user/getUser/**/*.yml"
+  name: get-user-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: user/{userId}
+        method: GET
+        cors: true
+        authorizer:
+          name: cognitoUserAuthorizer
+          type: COGNITO_USER_POOLS
+          arn:
+            Fn::GetAtt:
+              - CognitoUserPool
+              - Arn
+          claims:
+            - sub
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+      Resource: !GetAtt FormBuilderDataTable.Arn
