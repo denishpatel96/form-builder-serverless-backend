@@ -1,0 +1,31 @@
+createWorkspace:
+  handler: dist/workspace/createWorkspace/index.handler
+  package:
+    patterns:
+      - "dist/workspace/createWorkspace/**"
+      - "!dist/workspace/createWorkspace/**/*.ts"
+      - "!dist/workspace/createWorkspace/**/*.yml"
+  name: create-workspace-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: workspaces
+        method: POST
+        cors: true
+        authorizer:
+          name: cognitoUserAuthorizer
+          type: COGNITO_USER_POOLS
+          arn:
+            Fn::GetAtt:
+              - CognitoUserPool
+              - Arn
+          claims:
+            - sub
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:BatchWriteItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+      Resource: !GetAtt FormBuilderDataTable.Arn

@@ -1,0 +1,7 @@
+{
+  "name": "delete-item-trigger",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function triggered after item deleted in dynamodb table",
+  "author": "Denish Patel"
+}

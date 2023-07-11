@@ -1,0 +1,23 @@
+insertItemTrigger:
+  handler: ./dist/dynamoDbStream/insertItemTrigger/index.handler
+  package:
+    patterns:
+      - "dist/dynamoDbStream/insertItemTrigger/**"
+      - "!dist/dynamoDbStream/insertItemTrigger/**/*.ts"
+      - "!dist/dynamoDbStream/insertItemTrigger/**/*.yml"
+  name: insert-item-trigger-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - stream:
+        type: dynamodb
+        batchSize: 1
+        startingPosition: LATEST
+        arn: !GetAtt FormBuilderDataTable.StreamArn
+        filterPatterns:
+          - eventName: [INSERT]
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource: !GetAtt FormBuilderDataTable.Arn

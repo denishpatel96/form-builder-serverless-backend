@@ -20,7 +20,7 @@ provider:
 plugins:
   - serverless-iam-roles-per-function
   - serverless-offline
-
+  - serverless-api-gateway-throttling
 custom:
   # dynamodb table
   formBuilderDataTableName: form-builder-data-${self:provider.stage}
@@ -30,9 +30,19 @@ custom:
   userPoolClientName: user-pool-client-${self:provider.stage}
   # cognito identity pool
   identityPoolName: identity-pool-${self:provider.stage}
+  # required by serverless-api-gateway-throttling plugin for apigateway
+  apiGatewayThrottling:
+    maxRequestsPerSecond: 10
+    maxConcurrentRequests: 5
 
 functions:
+  - ${file(./src/functions/dynamoDbStream/insertItemTrigger/insertItemTrigger.yml)}
+  - ${file(./src/functions/dynamoDbStream/deleteItemTrigger/deleteItemTrigger.yml)}
   - ${file(./src/functions/user/getUser/getUser.yml)}
+  - ${file(./src/functions/workspace/getWorkspaces/getWorkspaces.yml)}
+  - ${file(./src/functions/workspace/createWorkspace/createWorkspace.yml)}
+  - ${file(./src/functions/workspace/updateWorkspace/updateWorkspace.yml)}
+  - ${file(./src/functions/workspace/deleteWorkspace/deleteWorkspace.yml)}
   - ${file(./src/functions/auth/authenticate/authenticate.yml)}
   - ${file(./src/functions/auth/changePassword/changePassword.yml)}
   - ${file(./src/functions/auth/confirmForgotPassword/confirmForgotPassword.yml)}
@@ -79,6 +89,8 @@ resources:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.formBuilderDataTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
     CognitoUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
@@ -118,8 +130,8 @@ resources:
         ClientName: ${self:custom.userPoolClientName}
         UserPoolId:
           Ref: CognitoUserPool
-        AccessTokenValidity: 1
-        IdTokenValidity: 1
+        AccessTokenValidity: 12
+        IdTokenValidity: 12
         ExplicitAuthFlows:
           - "ALLOW_USER_PASSWORD_AUTH"
           - "ALLOW_REFRESH_TOKEN_AUTH"

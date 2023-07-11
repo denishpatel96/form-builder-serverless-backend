@@ -1,0 +1,30 @@
+deleteWorkspace:
+  handler: dist/workspace/deleteWorkspace/index.handler
+  package:
+    patterns:
+      - "dist/workspace/deleteWorkspace/**"
+      - "!dist/workspace/deleteWorkspace/**/*.ts"
+      - "!dist/workspace/deleteWorkspace/**/*.yml"
+  name: delete-workspace-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - http:
+        path: workspaces/{userSub}/{workspaceId}
+        method: DELETE
+        cors: true
+        authorizer:
+          name: cognitoUserAuthorizer
+          type: COGNITO_USER_POOLS
+          arn:
+            Fn::GetAtt:
+              - CognitoUserPool
+              - Arn
+          claims:
+            - sub
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:DeleteItem"
+        - "dynamodb:GetItem"
+      Resource: !GetAtt FormBuilderDataTable.Arn

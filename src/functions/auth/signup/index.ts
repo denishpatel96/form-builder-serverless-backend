@@ -55,13 +55,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     // Make entries in db
     // 1. Create user
     // 2. Create default workspace
-    const orgId = ulid();
     const workspaceId = ulid();
     const workspaceData = {
-      pk: `u#${userId}`,
+      pk: `o#${userId}`,
       sk: `w#${workspaceId}`,
-      pk1: `w#${workspaceId}`,
-      sk1: "A",
       type: "WS",
       name: "My Workspace",
       memberCount: 0,
@@ -69,12 +66,13 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       responseCount: 0,
       createdAt: dateString,
       updatedAt: dateString,
+      isDefault: true,
     };
 
     const userData = {
-      pk: `u#${userId}`,
+      pk: `o#${userId}`,
       sk: "A",
-      pk1: `o#${orgId}`,
+      pk1: `u#${userId}`,
       sk1: "A",
       type: "USER",
       firstName,

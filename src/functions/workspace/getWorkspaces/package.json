@@ -1,0 +1,7 @@
+{
+  "name": "get-workspaces",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to get workspaces of organization",
+  "author": "Denish Patel"
+}

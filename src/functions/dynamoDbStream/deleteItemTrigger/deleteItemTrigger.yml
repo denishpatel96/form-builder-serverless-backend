@@ -1,0 +1,25 @@
+deleteItemTrigger:
+  handler: ./dist/dynamoDbStream/deleteItemTrigger/index.handler
+  package:
+    patterns:
+      - "dist/dynamoDbStream/deleteItemTrigger/**"
+      - "!dist/dynamoDbStream/deleteItemTrigger/**/*.ts"
+      - "!dist/dynamoDbStream/deleteItemTrigger/**/*.yml"
+  name: delete-item-trigger-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - stream:
+        type: dynamodb
+        batchSize: 1
+        startingPosition: LATEST
+        arn: !GetAtt FormBuilderDataTable.StreamArn
+        filterPatterns:
+          - eventName: [REMOVE]
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:BatchWriteItem"
+      Resource: !GetAtt FormBuilderDataTable.Arn

@@ -22,6 +22,14 @@ interface DBItem extends Record<string, any> {
   responseCount: number;
 }
 
+interface role {
+  orgId: string;
+  orgName: string;
+  role: string;
+  updatedAt: string;
+  createdAt: string;
+}
+
 interface User {
   firstName: string;
   lastName: string;
@@ -30,25 +38,17 @@ interface User {
   email: string;
   emailVerified: string;
   orgName: string;
-  orgId: string;
-  memberCount: number;
-  formCount: number;
-  workspaceCount: number;
-  responseCount: number;
-}
-
-export interface Workspace {
   id: string;
-  name: string;
-  updatedAt: string;
-  createdAt: string;
-  formCount: number;
   memberCount: number;
-  responsesCount: number;
+  formCount: number;
+  responseCount: number;
+  workspaceCount: number;
+  roles: role[];
 }
 
 const processData = (data: DBItem[]) => {
   const userData = data.find((i) => i.type === "USER");
+  const organizationsData = data.filter((i) => i.type === "O_MEM");
 
   let user: User = {
     firstName: userData.firstName,
@@ -58,26 +58,22 @@ const processData = (data: DBItem[]) => {
     email: userData.email,
     emailVerified: userData.emailVerified,
     orgName: userData.name,
-    orgId: userData.pk1.substring(2),
+    id: userData.pk1.substring(2),
     memberCount: userData.memberCount,
     formCount: userData.formCount,
-    workspaceCount: userData.workspaceCount,
     responseCount: userData.responseCount,
+    workspaceCount: userData.workspaceCount,
+    roles: organizationsData.map((i) => {
+      return {
+        orgId: i.pk1.substring(2),
+        orgName: i.name,
+        role: i.role,
+        updatedAt: i.updatedAt,
+        createdAt: i.createdAt,
+      };
+    }),
   };
-
-  const workspaceData = data.filter((i) => i.type === "WS");
-  let workspaces: Workspace[] = workspaceData.map((i) => {
-    return {
-      id: i.pk1.substring(2),
-      name: i.name,
-      updatedAt: i.updatedAt,
-      createdAt: i.createdAt,
-      formCount: i.formCount,
-      memberCount: i.memberCount,
-      responsesCount: i.responseCount,
-    };
-  });
-  return { user, workspaces };
+  return user;
 };
 
 export const handler: APIGatewayProxyHandler = async (event) => {
@@ -88,25 +84,23 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     },
   };
   try {
-    const userSub = event.requestContext.authorizer?.claims.sub;
-    const { userId } = event.pathParameters;
+    const claimedUserSub = event.requestContext.authorizer?.claims.sub;
+    const { userSub } = event.pathParameters;
 
-    if (!(userSub && userId && userId === userSub)) {
+    if (!(claimedUserSub && userSub && claimedUserSub === userSub)) {
       return {
-        statusCode: 401,
+        statusCode: 403,
         ...corsHeaders,
-        body: JSON.stringify({ message: "Unauthorized" }),
+        body: JSON.stringify({ message: "You are not authorized to fetch other user's info." }),
       };
     }
 
     const params: QueryCommandInput = {
       TableName: process.env.FORM_BUILDER_DATA_TABLE,
-      KeyConditionExpression: "#userId = :userId",
-      ExpressionAttributeNames: {
-        "#userId": "pk",
-      },
+      IndexName: "GSI1",
+      KeyConditionExpression: "pk1 = :pk1",
       ExpressionAttributeValues: marshall({
-        ":userId": `u#${userId}`,
+        ":pk1": `u#${userSub}`,
       }),
     };
     const { Items } = await db.send(new QueryCommand(params));

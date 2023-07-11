@@ -1,0 +1,10 @@
+{
+  "name": "create-workspace",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to create workspace",
+  "author": "Denish Patel",
+  "dependencies": {
+    "ulid": "^2.3.0"
+  }
+}

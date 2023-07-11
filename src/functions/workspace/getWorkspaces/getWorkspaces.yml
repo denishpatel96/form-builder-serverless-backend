@@ -1,16 +1,16 @@
-getUser:
-  handler: dist/user/getUser/index.handler
+getWorkspaces:
+  handler: dist/workspace/getWorkspaces/index.handler
   package:
     patterns:
-      - "dist/user/getUser/**"
-      - "!dist/user/getUser/**/*.ts"
-      - "!dist/user/getUser/**/*.yml"
-  name: get-user-${self:provider.stage}
+      - "dist/workspace/getWorkspaces/**"
+      - "!dist/workspace/getWorkspaces/**/*.ts"
+      - "!dist/workspace/getWorkspaces/**/*.yml"
+  name: get-workspaces-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
     - http:
-        path: users/{userSub}
+        path: workspaces/{userSub}
         method: GET
         cors: true
         authorizer:
@@ -27,4 +27,5 @@ getUser:
       Action:
         - "dynamodb:Query"
       Resource:
-        Fn::Join: ["/", [Fn::GetAtt: [FormBuilderDataTable, Arn], "index", "GSI1"]]
+        - Fn::GetAtt: [FormBuilderDataTable, Arn]
+        - Fn::Join: ["/", [Fn::GetAtt: [FormBuilderDataTable, Arn], "index", "GSI1"]]
