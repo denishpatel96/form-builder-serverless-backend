@@ -84,7 +84,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     },
   };
   try {
-    const claimedUserSub = event.requestContext.authorizer?.claims.sub;
+    const claimedUserSub = event.requestContext.authorizer?.jwt.claims.sub;
     const { userSub } = event.pathParameters;
 
     if (!(claimedUserSub && userSub && claimedUserSub === userSub)) {

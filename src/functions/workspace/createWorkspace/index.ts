@@ -23,7 +23,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
     const { userSub, name } = body;
-    const claimedUserSub = event.requestContext.authorizer?.claims.sub;
+    const claimedUserSub = event.requestContext.authorizer?.jwt.claims.sub;
 
     if (!(userSub && name)) {
       return {

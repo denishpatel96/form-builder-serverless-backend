@@ -9,19 +9,11 @@ getWorkspaces:
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
-    - http:
-        path: workspaces/{userSub}
+    - httpApi:
+        path: /workspaces/{userSub}
         method: GET
-        cors: true
         authorizer:
-          name: cognitoUserAuthorizer
-          type: COGNITO_USER_POOLS
-          arn:
-            Fn::GetAtt:
-              - CognitoUserPool
-              - Arn
-          claims:
-            - sub
+          name: jwtAuthorizer
   iamRoleStatements:
     - Effect: Allow
       Action:

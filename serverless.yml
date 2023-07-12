@@ -16,11 +16,29 @@ provider:
     FORM_BUILDER_DATA_TABLE: ${self:custom.formBuilderDataTableName}
     USER_POOL_ID: !Ref CognitoUserPool
     USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+  httpApi:
+    shouldStartNameWithService: true
+    # disableDefaultEndpoint: true
+    cors: true
+    authorizers:
+      jwtAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl:
+          Fn::Join:
+            - ""
+            - - "https://cognito-idp."
+              - ${self:provider.region}
+              - ".amazonaws.com/"
+              - !Ref CognitoUserPool
+        audience:
+          - !Ref CognitoUserPoolClient
 
 plugins:
   - serverless-iam-roles-per-function
   - serverless-offline
   - serverless-api-gateway-throttling
+  - serverless-domain-manager
 custom:
   # dynamodb table
   formBuilderDataTableName: form-builder-data-${self:provider.stage}
@@ -32,8 +50,20 @@ custom:
   identityPoolName: identity-pool-${self:provider.stage}
   # required by serverless-api-gateway-throttling plugin for apigateway
   apiGatewayThrottling:
-    maxRequestsPerSecond: 10
+    maxRequestsPerSecond: 5
     maxConcurrentRequests: 5
+  apiDomain:
+    dev: dev-api.vtwinforms.com
+    prod: api.vtwinforms.com
+  # required by serverless-domain-manger plugin for apigateway
+  customDomain:
+    http:
+      domainName: ${self:custom.apiDomain.${self:provider.stage}}
+      basePath: ""
+      stage: ${self:provider.stage}
+      certificateName: vtwinforms.com
+      endpointType: regional
+      createRoute53Record: false
 
 functions:
   - ${file(./src/functions/dynamoDbStream/insertItemTrigger/insertItemTrigger.yml)}
@@ -130,8 +160,8 @@ resources:
         ClientName: ${self:custom.userPoolClientName}
         UserPoolId:
           Ref: CognitoUserPool
-        AccessTokenValidity: 12
-        IdTokenValidity: 12
+        AccessTokenValidity: 9
+        IdTokenValidity: 9
         ExplicitAuthFlows:
           - "ALLOW_USER_PASSWORD_AUTH"
           - "ALLOW_REFRESH_TOKEN_AUTH"

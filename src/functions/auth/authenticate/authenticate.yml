@@ -9,10 +9,9 @@ authenticate:
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
-    - http:
-        path: auth/authenticate
+    - httpApi:
+        path: /auth/authenticate
         method: POST
-        cors: true
   iamRoleStatements:
     - Effect: Allow
       Action:

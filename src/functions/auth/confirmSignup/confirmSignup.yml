@@ -9,10 +9,9 @@ confirmSignup:
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
-    - http:
-        path: auth/confirmSignup
+    - httpApi:
+        path: /auth/confirmSignup
         method: POST
-        cors: true
   iamRoleStatements:
     - Effect: Allow
       Action:

@@ -9,10 +9,9 @@ resendCode:
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
-    - http:
-        path: auth/resendCode
+    - httpApi:
+        path: /auth/resendCode
         method: POST
-        cors: true
   iamRoleStatements:
     - Effect: Allow
       Action:

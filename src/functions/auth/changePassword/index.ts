@@ -15,7 +15,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       "Access-Control-Allow-Credentials": true,
     },
   };
-  const { email, given_name: firstName } = event.requestContext.authorizer?.claims;
+  const { email, given_name: firstName } = event.requestContext.authorizer?.jwt.claims;
   const dirPath = process.env.LAMBDA_TASK_ROOT
     ? process.env.LAMBDA_TASK_ROOT + "/dist/auth/changePassword/"
     : __dirname;

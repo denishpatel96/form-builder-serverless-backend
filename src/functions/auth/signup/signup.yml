@@ -9,10 +9,9 @@ signup:
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
-    - http:
-        path: auth/signup
+    - httpApi:
+        path: /auth/signup
         method: POST
-        cors: true
   iamRoleStatements:
     - Effect: Allow
       Action:
