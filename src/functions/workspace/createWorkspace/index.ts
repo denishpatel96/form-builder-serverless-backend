@@ -22,10 +22,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   };
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { userSub, name } = body;
-    const claimedUserSub = event.requestContext.authorizer?.jwt.claims.sub;
+    const { username, name } = body;
+    const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
 
-    if (!(userSub && name)) {
+    if (!(username && name)) {
       return {
         statusCode: 400,
         ...corsHeaders,
@@ -36,18 +36,18 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const dateString = new Date().toISOString();
     const workspaceId = ulid();
     const workspaceData = {
-      pk: `o#${userSub}`,
+      pk: `o#${username}`,
       sk: `w#${workspaceId}`,
       type: "WS",
       name: name,
-      memberCount: claimedUserSub !== userSub ? 1 : 0,
+      memberCount: claimedUsername !== username ? 1 : 0,
       formCount: 0,
       responseCount: 0,
       createdAt: dateString,
       updatedAt: dateString,
     };
 
-    if (claimedUserSub === userSub) {
+    if (claimedUsername === username) {
       // Just add workspace
       const wsParams: PutItemCommandInput = {
         TableName: process.env.FORM_BUILDER_DATA_TABLE,
@@ -59,8 +59,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       const params: GetItemCommandInput = {
         TableName: process.env.FORM_BUILDER_DATA_TABLE,
         Key: marshall({
-          pk: `o#${userSub}`,
-          sk: `u#${claimedUserSub}`,
+          pk: `o#${username}`,
+          sk: `u#${claimedUsername}`,
         }),
       };
       const { Item } = await db.send(new GetItemCommand(params));
@@ -77,9 +77,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
       const wsMemberData = {
         pk: `w#${workspaceId}`,
-        sk: `u#${claimedUserSub}`,
-        pk1: `u#${claimedUserSub}`,
-        sk1: `o#${userSub} w#${workspaceId}`,
+        sk: `u#${claimedUsername}`,
+        pk1: `u#${claimedUsername}`,
+        sk1: `o#${username} w#${workspaceId}`,
         type: "WS_MEM",
         role: "Owner",
         firstName: userData.firstName,

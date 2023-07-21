@@ -1,0 +1,21 @@
+updateUser:
+  handler: dist/user/updateUser/index.handler
+  package:
+    patterns:
+      - "dist/user/updateUser/**"
+      - "!dist/user/updateUser/**/*.ts"
+      - "!dist/user/updateUser/**/*.yml"
+  name: update-user-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /users
+        method: PUT
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource: !GetAtt FormBuilderDataTable.Arn

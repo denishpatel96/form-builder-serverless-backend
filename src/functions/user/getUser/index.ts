@@ -84,10 +84,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     },
   };
   try {
-    const claimedUserSub = event.requestContext.authorizer?.jwt.claims.sub;
-    const { userSub } = event.pathParameters;
+    const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
+    const { username } = event.pathParameters;
 
-    if (!(claimedUserSub && userSub && claimedUserSub === userSub)) {
+    if (!(claimedUsername && username && claimedUsername === username)) {
       return {
         statusCode: 403,
         ...corsHeaders,
@@ -100,7 +100,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       IndexName: "GSI1",
       KeyConditionExpression: "pk1 = :pk1",
       ExpressionAttributeValues: marshall({
-        ":pk1": `u#${userSub}`,
+        ":pk1": `u#${username}`,
       }),
     };
     const { Items } = await db.send(new QueryCommand(params));

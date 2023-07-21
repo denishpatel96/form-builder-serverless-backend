@@ -37,9 +37,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     // Add user in AWS Cognito.
     // Add generated userId in Database.
 
+    const userId = ulid();
     const signupParams: SignUpCommandInput = {
       ClientId: process.env.USER_POOL_CLIENT_ID,
-      Username: email,
+      Username: userId,
       Password: password,
       UserAttributes: [
         { Name: "email", Value: email },
@@ -47,8 +48,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         { Name: "family_name", Value: lastName },
       ],
     };
-    const signupResponse = await client.send(new SignUpCommand(signupParams));
-    const userId = signupResponse.UserSub;
+    await client.send(new SignUpCommand(signupParams));
 
     const dateString = new Date().toISOString();
 

@@ -1,0 +1,25 @@
+updateUserAttributes:
+  handler: ./dist/auth/updateUserAttributes/index.handler
+  package:
+    patterns:
+      - "dist/auth/updateUserAttributes/**"
+      - "!dist/auth/updateUserAttributes/**/*.ts"
+      - "!dist/auth/updateUserAttributes/**/*.yml"
+  name: update-user-attributes-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /auth/updateUserAttributes
+        method: POST
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "cognito-idp:UpdateUserAttributes"
+      Resource: !GetAtt CognitoUserPool.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource: !GetAtt FormBuilderDataTable.Arn

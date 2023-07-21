@@ -10,7 +10,7 @@ getWorkspaces:
   timeout: 5 # seconds
   events:
     - httpApi:
-        path: /workspaces/{userSub}
+        path: /workspaces/{username}
         method: GET
         authorizer:
           name: jwtAuthorizer

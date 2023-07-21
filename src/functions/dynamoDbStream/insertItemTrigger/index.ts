@@ -13,7 +13,6 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
 
     if (record.eventName == "INSERT") {
       var type = record.dynamodb.NewImage.type.S;
-      console.log("type :", type);
       if (type === "WS") {
         // if new workspace is added, then:
         // increment count of workspace,
@@ -30,8 +29,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
 
         console.log("Updating workspace count...");
         try {
-          const response = await db.send(new UpdateItemCommand(params));
-          console.log("Response : ", response);
+          await db.send(new UpdateItemCommand(params));
         } catch (error) {
           console.log("Error :", error);
         }

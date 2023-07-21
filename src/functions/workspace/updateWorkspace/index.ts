@@ -18,23 +18,23 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   };
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { userSub, workspaceId, name } = body;
-    const claimedUserSub = event.requestContext.authorizer?.jwt.claims.sub;
+    const { username, workspaceId, name } = body;
+    const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
 
-    if (!(userSub && workspaceId && name)) {
+    if (!(username && workspaceId && name)) {
       return {
         statusCode: 400,
         ...corsHeaders,
-        body: JSON.stringify({ message: "userSub and workspaceId and name are required" }),
+        body: JSON.stringify({ message: "username and workspaceId and name are required" }),
       };
     }
 
-    if (claimedUserSub !== userSub) {
+    if (claimedUsername !== username) {
       const params: GetItemCommandInput = {
         TableName: process.env.FORM_BUILDER_DATA_TABLE,
         Key: marshall({
           pk: `w#${workspaceId}`,
-          sk: `u#${claimedUserSub}`,
+          sk: `u#${claimedUsername}`,
         }),
       };
       const { Item } = await db.send(new GetItemCommand(params));
@@ -52,8 +52,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     const updateParams: UpdateItemCommandInput = {
       TableName: process.env.FORM_BUILDER_DATA_TABLE,
-      Key: marshall({ pk: `o#${userSub}`, sk: `w#${workspaceId}` }),
-      UpdateExpression: `SET name = :name and updatedAt = :updatedAt`,
+      Key: marshall({ pk: `o#${username}`, sk: `w#${workspaceId}` }),
+      UpdateExpression: `SET #name = :name, #updatedAt = :updatedAt`,
+      ExpressionAttributeNames: {
+        "#name": "name",
+        "#updatedAt": "updatedAt",
+      },
       ExpressionAttributeValues: marshall({
         ":name": name,
         ":updatedAt": new Date().toISOString(),

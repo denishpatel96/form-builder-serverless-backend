@@ -10,7 +10,6 @@ import { SES, SendEmailCommand, SendEmailCommandInput } from "@aws-sdk/client-se
 
 export const handler: PostConfirmationTriggerHandler = async (event) => {
   const db = new DynamoDBClient({ region: process.env.REGION });
-  console.log("EVENT : ", event);
   try {
     let { email, given_name: firstName } = event.request.userAttributes;
     const dirPath = process.env.LAMBDA_TASK_ROOT
@@ -47,7 +46,13 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
 
       // Send email
       let template = fs.readFileSync(dirPath + "accountConfirmedEmail.html", "utf8");
+
+      const url =
+        process.env.STAGE === "prod"
+          ? "https://vtwinforms.com/login"
+          : "http://localhost:3000/login";
       template = template.replace("$USER_NAME$", firstName);
+      template = template.replace("$URL$", url);
       await sendEmail(email, "Account Confirmed Successfully", template);
     } else if (event.triggerSource === "PostConfirmation_ConfirmForgotPassword") {
       // Send email

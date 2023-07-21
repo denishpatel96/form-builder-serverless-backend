@@ -27,26 +27,26 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     },
   };
   try {
-    const claimedUserSub = event.requestContext.authorizer?.jwt.claims.sub;
-    const { userSub } = event.pathParameters;
+    const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
+    const { username } = event.pathParameters;
     // userId is same as orgId.
-    if (!userSub) {
+    if (!username) {
       return {
         statusCode: 400,
         ...corsHeaders,
-        body: JSON.stringify({ message: "userSub is required" }),
+        body: JSON.stringify({ message: "username is required" }),
       };
     }
 
     let allowedWorkspaces: string[];
-    if (userSub !== claimedUserSub) {
+    if (username !== claimedUsername) {
       const params: QueryCommandInput = {
         TableName: process.env.FORM_BUILDER_DATA_TABLE,
         IndexName: "GSI1",
         KeyConditionExpression: "pk1 = :pk1 and begins_with(sk1, :sk1)",
         ExpressionAttributeValues: marshall({
-          ":pk1": `u#${claimedUserSub}`,
-          ":sk1": `o#${userSub} w#`,
+          ":pk1": `u#${claimedUsername}`,
+          ":sk1": `o#${username} w#`,
         }),
       };
       const { Items } = await db.send(new QueryCommand(params));
@@ -71,7 +71,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         ExclusiveStartKey: lastEvaluatedKey,
         KeyConditionExpression: "pk = :pk and begins_with(sk, :sk)",
         ExpressionAttributeValues: marshall({
-          ":pk": `o#${userSub}`,
+          ":pk": `o#${username}`,
           ":sk": "w#",
         }),
         ScanIndexForward: false,
@@ -99,7 +99,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
           isDefault: !!i.isDefault,
         };
       })
-      .filter((i) => (userSub !== claimedUserSub ? allowedWorkspaces.includes(i.id) : true));
+      .filter((i) => (username !== claimedUsername ? allowedWorkspaces.includes(i.id) : true));
     return {
       statusCode: 200,
       ...corsHeaders,

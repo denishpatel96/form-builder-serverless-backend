@@ -1,0 +1,7 @@
+{
+  "name": "verify-user-attribute",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to verify user attribute",
+  "author": "Denish Patel"
+}

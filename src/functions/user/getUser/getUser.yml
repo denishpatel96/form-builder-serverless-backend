@@ -10,7 +10,7 @@ getUser:
   timeout: 5 # seconds
   events:
     - httpApi:
-        path: /users/{userSub}
+        path: /users/{username}
         method: GET
         authorizer:
           name: jwtAuthorizer

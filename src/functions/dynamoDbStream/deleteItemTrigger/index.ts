@@ -78,7 +78,6 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
             };
             console.log("Deleting workspace related items...");
             let response: BatchWriteItemOutput = await db.send(new BatchWriteItemCommand(bwParams));
-            console.log("Response :", response);
             if (
               response &&
               response.UnprocessedItems &&

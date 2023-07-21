@@ -17,10 +17,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     },
   };
   try {
-    const { userSub, workspaceId } = event.pathParameters;
-    const claimedUserSub = event.requestContext.authorizer?.jwt.claims.sub;
+    const { username, workspaceId } = event.pathParameters;
+    const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
 
-    if (!(userSub && workspaceId)) {
+    if (!(username && workspaceId)) {
       return {
         statusCode: 400,
         ...corsHeaders,
@@ -28,12 +28,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       };
     }
 
-    if (claimedUserSub !== userSub) {
+    if (claimedUsername !== username) {
       const params: GetItemCommandInput = {
         TableName: process.env.FORM_BUILDER_DATA_TABLE,
         Key: marshall({
           pk: `w#${workspaceId}`,
-          sk: `u#${claimedUserSub}`,
+          sk: `u#${claimedUsername}`,
         }),
       };
       const { Item } = await db.send(new GetItemCommand(params));
@@ -51,7 +51,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     const deleteParams: DeleteItemCommandInput = {
       TableName: process.env.FORM_BUILDER_DATA_TABLE,
-      Key: marshall({ pk: `o#${userSub}`, sk: `w#${workspaceId}` }),
+      Key: marshall({ pk: `o#${username}`, sk: `w#${workspaceId}` }),
       ConditionExpression: "attribute_not_exists(isDefault)",
     };
     console.log("Deleting workspace...");

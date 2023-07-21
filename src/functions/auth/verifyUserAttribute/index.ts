@@ -1,7 +1,7 @@
 import {
-  ConfirmSignUpCommand,
   CognitoIdentityProviderClient,
-  ConfirmSignUpCommandInput,
+  VerifyUserAttributeCommand,
+  VerifyUserAttributeCommandInput,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { APIGatewayProxyHandler } from "aws-lambda";
 
@@ -15,27 +15,34 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   };
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { username, code } = body;
-    if (!(username && code)) {
+    const { accessToken, attributeName, code } = body as {
+      accessToken: string;
+      attributeName: string;
+      code: string;
+    };
+
+    if (!(accessToken && attributeName && code)) {
       return {
         statusCode: 400,
         ...corsHeaders,
-        body: JSON.stringify({ message: "username and verification code required" }),
+        body: JSON.stringify({
+          message: "accessToken, attributeName and code required",
+        }),
       };
     }
 
-    const params: ConfirmSignUpCommandInput = {
-      ClientId: process.env.USER_POOL_CLIENT_ID,
-      Username: username,
-      ConfirmationCode: code,
+    const params: VerifyUserAttributeCommandInput = {
+      AttributeName: attributeName,
+      AccessToken: accessToken,
+      Code: code,
     };
-    await client.send(new ConfirmSignUpCommand(params));
+    await client.send(new VerifyUserAttributeCommand(params));
 
     return {
       statusCode: 200,
       ...corsHeaders,
       body: JSON.stringify({
-        message: "Account confirmed successfully!",
+        message: `${attributeName} verified successfully!`,
       }),
     };
   } catch (e) {
