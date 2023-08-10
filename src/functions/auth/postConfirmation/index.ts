@@ -17,7 +17,7 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
       : __dirname;
 
     if (event.triggerSource === "PostConfirmation_ConfirmSignUp") {
-      const { sub: userId } = event.request.userAttributes;
+      const username = event.userName;
 
       // Make entry in db
       const dateString = new Date().toISOString();
@@ -26,7 +26,7 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
 
       const updateUserParams: UpdateItemCommandInput = {
         TableName: process.env.FORM_BUILDER_DATA_TABLE,
-        Key: marshall({ pk: `u#${userId}`, sk: "A" }),
+        Key: marshall({ pk: `o#${username}`, sk: "A" }),
         UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`)}`,
         ExpressionAttributeNames: objKeys.reduce(
           (acc, key, index) => ({ ...acc, [`#key${index}`]: key }),

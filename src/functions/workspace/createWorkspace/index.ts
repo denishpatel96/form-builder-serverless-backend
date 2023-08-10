@@ -12,6 +12,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 const db = new DynamoDBClient({ region: process.env.REGION });
 import { ulid } from "ulid";
+const CHARACTER_LIMIT = 60;
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const corsHeaders = {
@@ -39,12 +40,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       pk: `o#${username}`,
       sk: `w#${workspaceId}`,
       type: "WS",
-      name: name,
+      name: name.substr(0, CHARACTER_LIMIT),
       memberCount: claimedUsername !== username ? 1 : 0,
       formCount: 0,
       responseCount: 0,
       createdAt: dateString,
+      createdBy: claimedUsername,
       updatedAt: dateString,
+      bookmarked: false,
     };
 
     if (claimedUsername === username) {
@@ -122,13 +125,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       statusCode: 200,
       ...corsHeaders,
       body: JSON.stringify({
+        message: "Workspace created successfully!",
         id: workspaceData.sk.substring(2),
-        name: workspaceData.name,
-        updatedAt: workspaceData.updatedAt,
-        createdAt: workspaceData.createdAt,
-        formCount: workspaceData.formCount,
-        memberCount: workspaceData.memberCount,
-        responsesCount: workspaceData.responseCount,
       }),
     };
   } catch (e) {

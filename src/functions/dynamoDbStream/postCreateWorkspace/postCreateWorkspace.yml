@@ -1,11 +1,11 @@
-insertItemTrigger:
-  handler: ./dist/dynamoDbStream/insertItemTrigger/index.handler
+postCreateWorkspace:
+  handler: ./dist/dynamoDbStream/postCreateWorkspace/index.handler
   package:
     patterns:
-      - "dist/dynamoDbStream/insertItemTrigger/**"
-      - "!dist/dynamoDbStream/insertItemTrigger/**/*.ts"
-      - "!dist/dynamoDbStream/insertItemTrigger/**/*.yml"
-  name: insert-item-trigger-${self:provider.stage}
+      - "dist/dynamoDbStream/postCreateWorkspace/**"
+      - "!dist/dynamoDbStream/postCreateWorkspace/**/*.ts"
+      - "!dist/dynamoDbStream/postCreateWorkspace/**/*.yml"
+  name: post-create-workspace-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
@@ -16,6 +16,10 @@ insertItemTrigger:
         arn: !GetAtt FormBuilderDataTable.StreamArn
         filterPatterns:
           - eventName: [INSERT]
+            dynamodb:
+              NewImage:
+                type:
+                  S: [WS]
   iamRoleStatements:
     - Effect: Allow
       Action:

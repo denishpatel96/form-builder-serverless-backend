@@ -12,11 +12,12 @@ interface Workspace {
   id: string;
   name: string;
   createdAt: string;
+  createdBy: string;
   updatedAt: string;
   memberCount: number;
   formCount: number;
   responseCount: number;
-  isDefault?: boolean;
+  bookmarked: boolean;
 }
 
 export const handler: APIGatewayProxyHandler = async (event) => {
@@ -92,11 +93,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
           id: i.sk.substring(2),
           name: i.name,
           createdAt: i.createdAt,
+          createdBy: i.createdBy,
           updatedAt: i.updatedAt,
           memberCount: i.memberCount,
           formCount: i.formCount,
           responseCount: i.responseCount,
-          isDefault: !!i.isDefault,
+          bookmarked: !!i.bookmarked,
         };
       })
       .filter((i) => (username !== claimedUsername ? allowedWorkspaces.includes(i.id) : true));

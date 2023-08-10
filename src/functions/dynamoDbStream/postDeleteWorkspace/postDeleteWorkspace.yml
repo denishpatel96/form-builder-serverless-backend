@@ -1,11 +1,11 @@
-deleteItemTrigger:
-  handler: ./dist/dynamoDbStream/deleteItemTrigger/index.handler
+postDeleteWorkspace:
+  handler: ./dist/dynamoDbStream/postDeleteWorkspace/index.handler
   package:
     patterns:
-      - "dist/dynamoDbStream/deleteItemTrigger/**"
-      - "!dist/dynamoDbStream/deleteItemTrigger/**/*.ts"
-      - "!dist/dynamoDbStream/deleteItemTrigger/**/*.yml"
-  name: delete-item-trigger-${self:provider.stage}
+      - "dist/dynamoDbStream/postDeleteWorkspace/**"
+      - "!dist/dynamoDbStream/postDeleteWorkspace/**/*.ts"
+      - "!dist/dynamoDbStream/postDeleteWorkspace/**/*.yml"
+  name: post-delete-workspace-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
@@ -16,6 +16,10 @@ deleteItemTrigger:
         arn: !GetAtt FormBuilderDataTable.StreamArn
         filterPatterns:
           - eventName: [REMOVE]
+            dynamodb:
+              OldImage:
+                type:
+                  S: [WS]
   iamRoleStatements:
     - Effect: Allow
       Action:

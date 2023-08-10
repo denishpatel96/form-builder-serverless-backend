@@ -8,6 +8,7 @@ import {
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 const db = new DynamoDBClient({ region: process.env.REGION });
+const CHARACTER_LIMIT = 60;
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const corsHeaders = {
@@ -18,15 +19,19 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   };
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { username, workspaceId, name } = body;
+    const { username, workspaceId, ...updates } = body;
     const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
 
-    if (!(username && workspaceId && name)) {
+    if (!(username && workspaceId)) {
       return {
         statusCode: 400,
         ...corsHeaders,
-        body: JSON.stringify({ message: "username and workspaceId and name are required" }),
+        body: JSON.stringify({ message: "username and workspaceId are required" }),
       };
+    }
+
+    if (updates.name && updates.name.length > CHARACTER_LIMIT) {
+      updates.name = updates.name.substr(0, CHARACTER_LIMIT);
     }
 
     if (claimedUsername !== username) {
@@ -50,18 +55,37 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       }
     }
 
+    const workspaceData = { ...updates, updatedAt: new Date().toISOString() };
+    const objKeys = Object.keys(workspaceData);
+    const notAllowedAttributes = [
+      "pk",
+      "sk",
+      "createdAt",
+      "memberCount",
+      "formCount",
+      "responseCount",
+      "createdBy",
+    ];
+
     const updateParams: UpdateItemCommandInput = {
       TableName: process.env.FORM_BUILDER_DATA_TABLE,
       Key: marshall({ pk: `o#${username}`, sk: `w#${workspaceId}` }),
-      UpdateExpression: `SET #name = :name, #updatedAt = :updatedAt`,
-      ExpressionAttributeNames: {
-        "#name": "name",
-        "#updatedAt": "updatedAt",
-      },
-      ExpressionAttributeValues: marshall({
-        ":name": name,
-        ":updatedAt": new Date().toISOString(),
-      }),
+      UpdateExpression: `SET ${objKeys.map((key, index) =>
+        notAllowedAttributes.includes(key) ? "" : `#key${index} = :value${index}`
+      )}`,
+      ExpressionAttributeNames: objKeys.reduce(
+        (acc, key, index) => ({ ...acc, [`#key${index}`]: key }),
+        {}
+      ),
+      ExpressionAttributeValues: marshall(
+        objKeys.reduce(
+          (acc, key, index) => ({
+            ...acc,
+            [`:value${index}`]: workspaceData[key],
+          }),
+          {}
+        )
+      ),
     };
     await db.send(new UpdateItemCommand(updateParams));
 

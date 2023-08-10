@@ -52,7 +52,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const deleteParams: DeleteItemCommandInput = {
       TableName: process.env.FORM_BUILDER_DATA_TABLE,
       Key: marshall({ pk: `o#${username}`, sk: `w#${workspaceId}` }),
-      ConditionExpression: "attribute_not_exists(isDefault)",
     };
     console.log("Deleting workspace...");
     await db.send(new DeleteItemCommand(deleteParams));

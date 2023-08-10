@@ -3,12 +3,7 @@ import {
   CognitoIdentityProviderClient,
   SignUpCommandInput,
 } from "@aws-sdk/client-cognito-identity-provider";
-import {
-  BatchWriteItemCommand,
-  BatchWriteItemCommandInput,
-  BatchWriteItemOutput,
-  DynamoDBClient,
-} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, PutItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 import { ulid } from "ulid";
@@ -53,21 +48,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const dateString = new Date().toISOString();
 
     // Make entries in db
-    // 1. Create user
-    // 2. Create default workspace
-    const workspaceId = ulid();
-    const workspaceData = {
-      pk: `o#${userId}`,
-      sk: `w#${workspaceId}`,
-      type: "WS",
-      name: "My Workspace",
-      memberCount: 0,
-      formCount: 0,
-      responseCount: 0,
-      createdAt: dateString,
-      updatedAt: dateString,
-      isDefault: true,
-    };
 
     const userData = {
       pk: `o#${userId}`,
@@ -88,33 +68,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       updatedAt: dateString,
     };
 
-    const params: BatchWriteItemCommandInput = {
-      RequestItems: {
-        [process.env.FORM_BUILDER_DATA_TABLE]: [
-          {
-            PutRequest: {
-              Item: marshall(userData),
-            },
-          },
-          {
-            PutRequest: {
-              Item: marshall(workspaceData),
-            },
-          },
-        ],
-      },
+    const params: PutItemCommandInput = {
+      TableName: process.env.FORM_BUILDER_DATA_TABLE,
+      Item: marshall(userData),
     };
-    let response: BatchWriteItemOutput = await db.send(new BatchWriteItemCommand(params));
-
-    // handle unprocessed item
-    while (
-      response &&
-      response.UnprocessedItems &&
-      Object.keys(response.UnprocessedItems).length > 0
-    ) {
-      let params: BatchWriteItemCommandInput = { RequestItems: response.UnprocessedItems };
-      response = await db.send(new BatchWriteItemCommand(params));
-    }
+    await db.send(new PutItemCommand(params));
 
     return {
       statusCode: 200,

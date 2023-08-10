@@ -66,8 +66,9 @@ custom:
       createRoute53Record: false
 
 functions:
-  - ${file(./src/functions/dynamoDbStream/insertItemTrigger/insertItemTrigger.yml)}
-  - ${file(./src/functions/dynamoDbStream/deleteItemTrigger/deleteItemTrigger.yml)}
+  - ${file(./src/functions/dynamoDbStream/postCreateWorkspace/postCreateWorkspace.yml)}
+  - ${file(./src/functions/dynamoDbStream/postDeleteWorkspace/postDeleteWorkspace.yml)}
+  - ${file(./src/functions/dynamoDbStream/postModifyUser/postModifyUser.yml)}
   - ${file(./src/functions/user/getUser/getUser.yml)}
   - ${file(./src/functions/user/updateUser/updateUser.yml)}
   - ${file(./src/functions/workspace/getWorkspaces/getWorkspaces.yml)}
