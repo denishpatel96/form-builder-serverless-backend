@@ -16,7 +16,7 @@ signup:
     - Effect: Allow
       Action:
         - "dynamodb:PutItem"
-      Resource: !GetAtt FormBuilderDataTable.Arn
+      Resource: !GetAtt UsersTable.Arn
     - Effect: Allow
       Action:
         - "cognito-idp:SignUp"

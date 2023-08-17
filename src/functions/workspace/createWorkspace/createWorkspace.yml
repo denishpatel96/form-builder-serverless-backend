@@ -20,4 +20,8 @@ createWorkspace:
         - "dynamodb:BatchWriteItem"
         - "dynamodb:PutItem"
         - "dynamodb:GetItem"
-      Resource: !GetAtt FormBuilderDataTable.Arn
+      Resource: !GetAtt WorkspacesTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt OrganizationRolesTable.Arn

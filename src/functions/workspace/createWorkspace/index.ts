@@ -23,25 +23,24 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   };
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { username, name } = body;
+    const { orgId, workspaceName } = body;
     const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
 
-    if (!(username && name)) {
+    if (!(orgId && workspaceName)) {
       return {
         statusCode: 400,
         ...corsHeaders,
-        body: JSON.stringify({ message: "organization id and workspace name are required" }),
+        body: JSON.stringify({ message: "orgId and workspaceName are required" }),
       };
     }
 
     const dateString = new Date().toISOString();
     const workspaceId = ulid();
     const workspaceData = {
-      pk: `o#${username}`,
-      sk: `w#${workspaceId}`,
-      type: "WS",
-      name: name.substr(0, CHARACTER_LIMIT),
-      memberCount: claimedUsername !== username ? 1 : 0,
+      orgId: orgId,
+      workspaceId: workspaceId,
+      name: workspaceName.substr(0, CHARACTER_LIMIT),
+      memberCount: claimedUsername !== orgId ? 1 : 0,
       formCount: 0,
       responseCount: 0,
       createdAt: dateString,
@@ -50,25 +49,25 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       bookmarked: false,
     };
 
-    if (claimedUsername === username) {
+    if (claimedUsername === orgId) {
       // Just add workspace
       const wsParams: PutItemCommandInput = {
-        TableName: process.env.FORM_BUILDER_DATA_TABLE,
+        TableName: process.env.WORKSPACES_TABLE,
         Item: marshall(workspaceData),
       };
 
       await db.send(new PutItemCommand(wsParams));
     } else {
       const params: GetItemCommandInput = {
-        TableName: process.env.FORM_BUILDER_DATA_TABLE,
+        TableName: process.env.ORGANIZATION_ROLES_TABLE,
         Key: marshall({
-          pk: `o#${username}`,
-          sk: `u#${claimedUsername}`,
+          orgId: orgId,
+          userId: claimedUsername,
         }),
       };
       const { Item } = await db.send(new GetItemCommand(params));
       const userData = Item ? unmarshall(Item) : null;
-      if (!(userData && (userData.role === "Editor" || userData.role === "Admin"))) {
+      if (!(userData && (userData.role === "editor" || userData.role === "admin"))) {
         return {
           statusCode: 403,
           ...corsHeaders,
@@ -79,27 +78,27 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       }
 
       const wsMemberData = {
-        pk: `w#${workspaceId}`,
-        sk: `u#${claimedUsername}`,
-        pk1: `u#${claimedUsername}`,
-        sk1: `o#${username} w#${workspaceId}`,
-        type: "WS_MEM",
+        workspaceId: workspaceId,
+        userId: claimedUsername,
         role: "Owner",
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
         createdAt: dateString,
         updatedAt: dateString,
+        createdBy: claimedUsername,
       };
 
       const bwParams: BatchWriteItemCommandInput = {
         RequestItems: {
-          [process.env.FORM_BUILDER_DATA_TABLE]: [
+          [process.env.WORKSPACES_TABLE]: [
             {
               PutRequest: {
                 Item: marshall(workspaceData),
               },
             },
+          ],
+          [process.env.WORKSPACE_ROLES_TABLE]: [
             {
               PutRequest: {
                 Item: marshall(wsMemberData),
@@ -126,7 +125,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       ...corsHeaders,
       body: JSON.stringify({
         message: "Workspace created successfully!",
-        id: workspaceData.sk.substring(2),
+        id: workspaceData.workspaceId,
       }),
     };
   } catch (e) {

@@ -17,6 +17,6 @@ getUser:
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - "dynamodb:Query"
+        - "dynamodb:GetItem"
       Resource:
-        Fn::Join: ["/", [Fn::GetAtt: [FormBuilderDataTable, Arn], "index", "GSI1"]]
+        - Fn::GetAtt: [UsersTable, Arn]

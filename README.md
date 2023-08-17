@@ -4,7 +4,7 @@
 
 - Serverless Framework
 - AWS Lambdas (Nodejs)
-- AWS Dynamodb as database (Single Table Design)
+- AWS Dynamodb as database
 - AWS Cognito for user authentication and authorization
 
 ## Project Build and Deploy

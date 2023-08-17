@@ -10,7 +10,7 @@ deleteWorkspace:
   timeout: 5 # seconds
   events:
     - httpApi:
-        path: /workspaces/{username}/{workspaceId}
+        path: /workspaces/{orgId}/{workspaceId}
         method: DELETE
         authorizer:
           name: jwtAuthorizer
@@ -18,5 +18,8 @@ deleteWorkspace:
     - Effect: Allow
       Action:
         - "dynamodb:DeleteItem"
+      Resource: !GetAtt WorkspacesTable.Arn
+    - Effect: Allow
+      Action:
         - "dynamodb:GetItem"
-      Resource: !GetAtt FormBuilderDataTable.Arn
+      Resource: !GetAtt WorkspaceRolesTable.Arn

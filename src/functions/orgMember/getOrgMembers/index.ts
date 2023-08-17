@@ -1,9 +1,10 @@
 import {
-  DeleteItemCommand,
-  DeleteItemCommandInput,
+  AttributeValue,
   DynamoDBClient,
   GetItemCommand,
   GetItemCommandInput,
+  QueryCommand,
+  QueryCommandInput,
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
@@ -17,48 +18,61 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     },
   };
   try {
-    const { orgId, workspaceId } = event.pathParameters;
     const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
-
-    if (!(orgId && workspaceId)) {
+    const { orgId } = event.pathParameters;
+    // userId is same as orgId.
+    if (!orgId) {
       return {
         statusCode: 400,
         ...corsHeaders,
-        body: JSON.stringify({ message: "orgId and workspaceId are required" }),
+        body: JSON.stringify({ message: "orgId is required" }),
       };
     }
 
-    if (claimedUsername !== orgId) {
+    if (orgId !== claimedUsername) {
       const params: GetItemCommandInput = {
-        TableName: process.env.WORKSPACE_ROLES_TABLE,
+        TableName: process.env.ORGANIZATION_ROLES_TABLE,
         Key: marshall({
-          workspaceId: workspaceId,
+          orgId: orgId,
           userId: claimedUsername,
         }),
       };
       const { Item } = await db.send(new GetItemCommand(params));
-      const userData = Item ? unmarshall(Item) : null;
-      if (!(userData && userData.role === "Owner")) {
+      if (!Item) {
         return {
           statusCode: 403,
           ...corsHeaders,
           body: JSON.stringify({
-            message: "You are not authorized to delete the workspace for this organization.",
+            message: "You are not authorized to get members for this organization.",
           }),
         };
       }
     }
 
-    const deleteParams: DeleteItemCommandInput = {
-      TableName: process.env.WORKSPACES_TABLE,
-      Key: marshall({ orgId, workspaceId }),
+    let items: Record<string, AttributeValue>[] = [];
+    const recursiveQuery = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
+      const params: QueryCommandInput = {
+        TableName: process.env.ORGANIZATION_ROLES_TABLE,
+        ExclusiveStartKey: lastEvaluatedKey,
+        KeyConditionExpression: "orgId = :orgId",
+        ExpressionAttributeValues: marshall({
+          ":orgId": orgId,
+        }),
+      };
+      const { Items, LastEvaluatedKey } = await db.send(new QueryCommand(params));
+      Items.forEach((i) => items.push(i));
+      if (LastEvaluatedKey) {
+        await recursiveQuery(LastEvaluatedKey);
+      }
     };
-    console.log("Deleting workspace...");
-    await db.send(new DeleteItemCommand(deleteParams));
+
+    await recursiveQuery();
+
+    const orgMembers = items.map((i) => unmarshall(i));
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify({ message: "Workspace deleted successfully!" }),
+      body: JSON.stringify(orgMembers),
     };
   } catch (e) {
     console.error(e);

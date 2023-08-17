@@ -19,14 +19,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   };
   try {
     const body: any = event.body ? JSON.parse(event.body) : {};
-    const { username, workspaceId, ...updates } = body;
+    const { orgId, workspaceId, ...updates } = body;
     const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
 
-    if (!(username && workspaceId)) {
+    if (!(orgId && workspaceId)) {
       return {
         statusCode: 400,
         ...corsHeaders,
-        body: JSON.stringify({ message: "username and workspaceId are required" }),
+        body: JSON.stringify({ message: "orgId and workspaceId are required" }),
       };
     }
 
@@ -34,12 +34,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       updates.name = updates.name.substr(0, CHARACTER_LIMIT);
     }
 
-    if (claimedUsername !== username) {
+    if (claimedUsername !== orgId) {
       const params: GetItemCommandInput = {
-        TableName: process.env.FORM_BUILDER_DATA_TABLE,
+        TableName: process.env.WORKSPACE_ROLES_TABLE,
         Key: marshall({
-          pk: `w#${workspaceId}`,
-          sk: `u#${claimedUsername}`,
+          workspaceId: workspaceId,
+          userId: claimedUsername,
         }),
       };
       const { Item } = await db.send(new GetItemCommand(params));
@@ -58,8 +58,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const workspaceData = { ...updates, updatedAt: new Date().toISOString() };
     const objKeys = Object.keys(workspaceData);
     const notAllowedAttributes = [
-      "pk",
-      "sk",
+      "orgId",
+      "workspaceId",
       "createdAt",
       "memberCount",
       "formCount",
@@ -68,8 +68,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     ];
 
     const updateParams: UpdateItemCommandInput = {
-      TableName: process.env.FORM_BUILDER_DATA_TABLE,
-      Key: marshall({ pk: `o#${username}`, sk: `w#${workspaceId}` }),
+      TableName: process.env.WORKSPACES_TABLE,
+      Key: marshall({ orgId: orgId, workspaceId: workspaceId }),
       UpdateExpression: `SET ${objKeys.map((key, index) =>
         notAllowedAttributes.includes(key) ? "" : `#key${index} = :value${index}`
       )}`,

@@ -50,26 +50,16 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     // Make entries in db
 
     const userData = {
-      pk: `o#${userId}`,
-      sk: "A",
-      pk1: `u#${userId}`,
-      sk1: "A",
-      type: "USER",
+      id: userId,
       firstName,
       lastName,
       email,
-      // Org Name
-      name: email.substr(0, email.indexOf("@")),
-      memberCount: 0,
-      workspaceCount: 1,
-      formCount: 0,
-      responseCount: 0,
       createdAt: dateString,
       updatedAt: dateString,
     };
 
     const params: PutItemCommandInput = {
-      TableName: process.env.FORM_BUILDER_DATA_TABLE,
+      TableName: process.env.USERS_TABLE,
       Item: marshall(userData),
     };
     await db.send(new PutItemCommand(params));

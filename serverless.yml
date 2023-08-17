@@ -13,7 +13,10 @@ provider:
   environment:
     STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
-    FORM_BUILDER_DATA_TABLE: ${self:custom.formBuilderDataTableName}
+    USERS_TABLE: ${self:custom.usersTableName}
+    ORGANIZATION_ROLES_TABLE: ${self:custom.organizationRolesTableName}
+    WORKSPACES_TABLE: ${self:custom.workspacesTableName}
+    WORKSPACE_ROLES_TABLE: ${self:custom.workspaceRolesTableName}
     USER_POOL_ID: !Ref CognitoUserPool
     USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
   httpApi:
@@ -40,8 +43,12 @@ plugins:
   - serverless-api-gateway-throttling
   - serverless-domain-manager
 custom:
-  # dynamodb table
-  formBuilderDataTableName: form-builder-table-${self:provider.stage}
+  # dynamodb tables
+  usersTableName: users-table-${self:provider.stage}
+  organizationRolesTableName: organization-roles-table-${self:provider.stage}
+  workspacesTableName: workspaces-table-${self:provider.stage}
+  workspaceRolesTableName: workspace-roles-table-${self:provider.stage}
+  formsTableName: forms-table-${self:provider.stage}
   # cognito user pool
   userPoolName: form-builder-user-pool-${self:provider.stage}
   # cognito user pool client
@@ -66,15 +73,17 @@ custom:
       createRoute53Record: false
 
 functions:
-  - ${file(./src/functions/dynamoDbStream/postCreateWorkspace/postCreateWorkspace.yml)}
-  - ${file(./src/functions/dynamoDbStream/postDeleteWorkspace/postDeleteWorkspace.yml)}
-  - ${file(./src/functions/dynamoDbStream/postModifyUser/postModifyUser.yml)}
+  - ${file(./src/functions/orgMember/inviteOrgMember/inviteOrgMember.yml)}
+  - ${file(./src/functions/orgMember/getOrgMembers/getOrgMembers.yml)}
   - ${file(./src/functions/user/getUser/getUser.yml)}
   - ${file(./src/functions/user/updateUser/updateUser.yml)}
+  - ${file(./src/functions/user/postModifyUser/postModifyUser.yml)}
   - ${file(./src/functions/workspace/getWorkspaces/getWorkspaces.yml)}
   - ${file(./src/functions/workspace/createWorkspace/createWorkspace.yml)}
   - ${file(./src/functions/workspace/updateWorkspace/updateWorkspace.yml)}
   - ${file(./src/functions/workspace/deleteWorkspace/deleteWorkspace.yml)}
+  - ${file(./src/functions/workspace/postCreateWorkspace/postCreateWorkspace.yml)}
+  - ${file(./src/functions/workspace/postDeleteWorkspace/postDeleteWorkspace.yml)}
   - ${file(./src/functions/auth/authenticate/authenticate.yml)}
   - ${file(./src/functions/auth/changePassword/changePassword.yml)}
   - ${file(./src/functions/auth/confirmForgotPassword/confirmForgotPassword.yml)}
@@ -95,34 +104,123 @@ package:
 
 resources:
   Resources:
-    FormBuilderDataTable:
+    UsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
         KeySchema:
-          - AttributeName: pk
+          - AttributeName: id
             KeyType: HASH
-          - AttributeName: sk
-            KeyType: RANGE
         AttributeDefinitions:
-          - AttributeName: pk
+          - AttributeName: id
             AttributeType: S
-          - AttributeName: sk
-            AttributeType: S
-          - AttributeName: pk1
-            AttributeType: S
-          - AttributeName: sk1
+          - AttributeName: email
             AttributeType: S
         GlobalSecondaryIndexes:
-          - IndexName: GSI1
+          - IndexName: email-index
             KeySchema:
-              - AttributeName: pk1
+              - AttributeName: email
                 KeyType: HASH
-              - AttributeName: sk1
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.usersTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    OrganizationRolesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: orgId
+            KeyType: HASH
+          - AttributeName: userId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: orgId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: userId-orgId-index
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: orgId
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:custom.formBuilderDataTableName}
+        TableName: ${self:custom.organizationRolesTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    WorkspacesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: orgId
+            KeyType: HASH
+          - AttributeName: workspaceId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: orgId
+            AttributeType: S
+          - AttributeName: workspaceId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.workspacesTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    WorkspaceRolesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: workspaceId
+            KeyType: HASH
+          - AttributeName: userId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: workspaceId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: userId-workspaceId-index
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: workspaceId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.workspaceRolesTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    FormsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: workspaceId
+            KeyType: HASH
+          - AttributeName: formId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: workspaceId
+            AttributeType: S
+          - AttributeName: formId
+            AttributeType: S
+          - AttributeName: orgId
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: orgId-formId-index
+            KeySchema:
+              - AttributeName: orgId
+                KeyType: HASH
+              - AttributeName: formId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.formsTableName}
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
     CognitoUserPool:

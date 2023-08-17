@@ -1,0 +1,28 @@
+inviteOrgMember:
+  handler: dist/orgMember/inviteOrgMember/index.handler
+  package:
+    patterns:
+      - "dist/orgMember/inviteOrgMember/**"
+      - "!dist/orgMember/inviteOrgMember/**/*.ts"
+      - "!dist/orgMember/inviteOrgMember/**/*.yml"
+  name: invite-org-member-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /members/invite
+        method: POST
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource:
+        - Fn::GetAtt: [UsersTable, Arn]
+        - Fn::GetAtt: [OrganizationRolesTable, Arn]
+    - Effect: Allow
+      Action:
+        - "ses:SendEmail"
+        - "ses:SendRawEmail"
+      Resource: arn:aws:ses:us-west-2:954569320321:identity/*

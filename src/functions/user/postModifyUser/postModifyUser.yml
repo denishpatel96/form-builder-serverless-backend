@@ -1,0 +1,38 @@
+postModifyUser:
+  handler: ./dist/user/postModifyUser/index.handler
+  package:
+    patterns:
+      - "dist/user/postModifyUser/**"
+      - "!dist/user/postModifyUser/**/*.ts"
+      - "!dist/user/postModifyUser/**/*.yml"
+  name: post-modify-user-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - stream:
+        type: dynamodb
+        batchSize: 1
+        startingPosition: LATEST
+        arn: !GetAtt UsersTable.StreamArn
+        filterPatterns:
+          - eventName: [MODIFY]
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+        - "dynamodb:Query"
+      Resource:
+        - Fn::GetAtt: [OrganizationRolesTable, Arn]
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource:
+        - Fn::GetAtt: [WorkspaceRolesTable, Arn]
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+      Resource:
+        - Fn::Join:
+            ["/", [Fn::GetAtt: [OrganizationRolesTable, Arn], "index", "userId-orgId-index"]]
+        - Fn::Join:
+            ["/", [Fn::GetAtt: [WorkspaceRolesTable, Arn], "index", "userId-workspaceId-index"]]

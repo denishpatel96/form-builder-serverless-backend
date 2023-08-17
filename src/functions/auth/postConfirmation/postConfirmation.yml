@@ -17,10 +17,6 @@ postConfirmation:
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - "dynamodb:UpdateItem"
-      Resource: !GetAtt FormBuilderDataTable.Arn
-    - Effect: Allow
-      Action:
         - "ses:SendEmail"
         - "ses:SendRawEmail"
       Resource: arn:aws:ses:us-west-2:954569320321:identity/*

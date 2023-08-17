@@ -1,0 +1,30 @@
+postDeleteWorkspace:
+  handler: ./dist/workspace/postDeleteWorkspace/index.handler
+  package:
+    patterns:
+      - "dist/workspace/postDeleteWorkspace/**"
+      - "!dist/workspace/postDeleteWorkspace/**/*.ts"
+      - "!dist/workspace/postDeleteWorkspace/**/*.yml"
+  name: post-delete-workspace-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - stream:
+        type: dynamodb
+        batchSize: 1
+        startingPosition: LATEST
+        arn: !GetAtt WorkspacesTable.StreamArn
+        filterPatterns:
+          - eventName: [REMOVE]
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource: !GetAtt UsersTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+        - "dynamodb:BatchWriteItem"
+      Resource:
+        - Fn::GetAtt: [WorkspaceRolesTable, Arn]
+        - Fn::GetAtt: [FormsTable, Arn]

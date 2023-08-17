@@ -31,17 +31,15 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const objKeys = Object.keys(userData);
     const notAllowedAttributes = [
       "createdAt",
-      "emailVerified",
       "memberCount",
       "formCount",
       "responseCount",
       "workspaceCount",
-      "pk",
-      "sk",
+      "id",
     ];
     const updateUserParams: UpdateItemCommandInput = {
-      TableName: process.env.FORM_BUILDER_DATA_TABLE,
-      Key: marshall({ pk: `o#${username}`, sk: "A" }),
+      TableName: process.env.USERS_TABLE,
+      Key: marshall({ id: username }),
       UpdateExpression: `SET ${objKeys.map((key, index) =>
         notAllowedAttributes.includes(key) ? "" : `#key${index} = :value${index}`
       )}`,

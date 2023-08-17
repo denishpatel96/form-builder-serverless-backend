@@ -21,10 +21,10 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
     try {
       // if workspace is deleted, then:
       // decrement count of workspace,
-      const orgId = record.dynamodb.OldImage.pk.S;
+      const orgId = record.dynamodb.OldImage.orgId.S;
       const updateparams: UpdateItemCommandInput = {
-        TableName: process.env.FORM_BUILDER_DATA_TABLE,
-        Key: marshall({ pk: orgId, sk: "A" }),
+        TableName: process.env.USERS_TABLE,
+        Key: marshall({ id: orgId }),
         UpdateExpression: `SET workspaceCount = if_not_exists(workspaceCount, :start) - :decrement`,
         ExpressionAttributeValues: marshall({
           ":decrement": 1,
@@ -36,34 +36,64 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       await db.send(new UpdateItemCommand(updateparams));
 
       // get all workspace related item
-      const workspaceId = record.dynamodb.OldImage.sk.S;
+      const workspaceId = record.dynamodb.OldImage.workspaceId.S;
       let items: Record<string, AttributeValue>[] = [];
-      const recursiveQuery = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
+      const recursiveQuery1 = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
         const params: QueryCommandInput = {
-          TableName: process.env.FORM_BUILDER_DATA_TABLE,
+          TableName: process.env.WORKSPACE_ROLES_TABLE,
           ExclusiveStartKey: lastEvaluatedKey,
-          KeyConditionExpression: "pk = :pk",
+          KeyConditionExpression: "workspaceId = :workspaceId",
           ExpressionAttributeValues: marshall({
-            ":pk": workspaceId,
+            ":workspaceId": workspaceId,
           }),
-          ScanIndexForward: false,
         };
         const { Items, LastEvaluatedKey } = await db.send(new QueryCommand(params));
         Items.forEach((i) => items.push(i));
         if (LastEvaluatedKey) {
-          await recursiveQuery(LastEvaluatedKey);
+          await recursiveQuery1(LastEvaluatedKey);
+        }
+      };
+      await recursiveQuery1();
+      const workspaceRolesToDelete = items.map((i) => unmarshall(i));
+
+      items = [];
+      const recursiveQuery2 = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
+        const params: QueryCommandInput = {
+          TableName: process.env.FORMS_TABLE,
+          ExclusiveStartKey: lastEvaluatedKey,
+          KeyConditionExpression: "workspaceId = :workspaceId",
+          ExpressionAttributeValues: marshall({
+            ":workspaceId": workspaceId,
+          }),
+        };
+        const { Items, LastEvaluatedKey } = await db.send(new QueryCommand(params));
+        Items.forEach((i) => items.push(i));
+        if (LastEvaluatedKey) {
+          await recursiveQuery2(LastEvaluatedKey);
         }
       };
 
+      await recursiveQuery2();
+      const formsToDelete = items.map((i) => unmarshall(i));
+
       // batch delete all the data
-      const itemsToDelete = items.map((i) => unmarshall(i));
       let requestItems = {
-        [process.env.FORM_BUILDER_DATA_TABLE]: itemsToDelete.map((i) => {
+        [process.env.WORKSPACE_ROLES_TABLE]: workspaceRolesToDelete.map((i) => {
           return {
             DeleteRequest: {
               Key: marshall({
-                pk: i.pk,
-                sk: i.sk,
+                workspaceId: i.workspaceId,
+                userId: i.userId,
+              }),
+            },
+          };
+        }),
+        [process.env.FORMS_TABLE]: formsToDelete.map((i) => {
+          return {
+            DeleteRequest: {
+              Key: marshall({
+                workspaceId: i.workspaceId,
+                formId: i.formId,
               }),
             },
           };

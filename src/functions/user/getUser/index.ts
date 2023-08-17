@@ -1,80 +1,7 @@
-import { DynamoDBClient, QueryCommand, QueryCommandInput } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, GetItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 const db = new DynamoDBClient({ region: process.env.REGION });
-
-interface DBItem extends Record<string, any> {
-  name: string;
-  firstName: string;
-  lastName: string;
-  createdAt: string;
-  updatedAt: string;
-  email: string;
-  emailVerified: string;
-  pk1: string;
-  sk1: string;
-  sk: string;
-  pk: string;
-  type: string;
-  memberCount: number;
-  formCount: number;
-  workspaceCount: number;
-  responseCount: number;
-}
-
-interface role {
-  orgId: string;
-  orgName: string;
-  role: string;
-  updatedAt: string;
-  createdAt: string;
-}
-
-interface User {
-  firstName: string;
-  lastName: string;
-  createdAt: string;
-  updatedAt: string;
-  email: string;
-  emailVerified: string;
-  orgName: string;
-  id: string;
-  memberCount: number;
-  formCount: number;
-  responseCount: number;
-  workspaceCount: number;
-  roles: role[];
-}
-
-const processData = (data: DBItem[]) => {
-  const userData = data.find((i) => i.type === "USER");
-  const organizationsData = data.filter((i) => i.type === "O_MEM");
-
-  let user: User = {
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    createdAt: userData.createdAt,
-    updatedAt: userData.updatedAt,
-    email: userData.email,
-    emailVerified: userData.emailVerified,
-    orgName: userData.name,
-    id: userData.pk1.substring(2),
-    memberCount: userData.memberCount,
-    formCount: userData.formCount,
-    responseCount: userData.responseCount,
-    workspaceCount: userData.workspaceCount,
-    roles: organizationsData.map((i) => {
-      return {
-        orgId: i.pk1.substring(2),
-        orgName: i.name,
-        role: i.role,
-        updatedAt: i.updatedAt,
-        createdAt: i.createdAt,
-      };
-    }),
-  };
-  return user;
-};
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const corsHeaders = {
@@ -95,19 +22,16 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       };
     }
 
-    const params: QueryCommandInput = {
-      TableName: process.env.FORM_BUILDER_DATA_TABLE,
-      IndexName: "GSI1",
-      KeyConditionExpression: "pk1 = :pk1",
-      ExpressionAttributeValues: marshall({
-        ":pk1": `u#${username}`,
+    const params: GetItemCommandInput = {
+      TableName: process.env.USERS_TABLE,
+      Key: marshall({
+        id: claimedUsername,
       }),
     };
-    const { Items } = await db.send(new QueryCommand(params));
+    const { Item } = await db.send(new GetItemCommand(params));
 
-    const data = Items.map((i) => unmarshall(i));
-    if (data && data.length > 0) {
-      const userData = processData(data as DBItem[]);
+    if (Item) {
+      const userData = unmarshall(Item);
       return {
         statusCode: 200,
         ...corsHeaders,

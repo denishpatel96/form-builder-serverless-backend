@@ -1,15 +1,8 @@
 import * as fs from "fs";
-import {
-  DynamoDBClient,
-  UpdateItemCommand,
-  UpdateItemCommandInput,
-} from "@aws-sdk/client-dynamodb";
-import { marshall } from "@aws-sdk/util-dynamodb";
 import { PostConfirmationTriggerHandler } from "aws-lambda";
 import { SES, SendEmailCommand, SendEmailCommandInput } from "@aws-sdk/client-ses";
 
 export const handler: PostConfirmationTriggerHandler = async (event) => {
-  const db = new DynamoDBClient({ region: process.env.REGION });
   try {
     let { email, given_name: firstName } = event.request.userAttributes;
     const dirPath = process.env.LAMBDA_TASK_ROOT
@@ -17,33 +10,6 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
       : __dirname;
 
     if (event.triggerSource === "PostConfirmation_ConfirmSignUp") {
-      const username = event.userName;
-
-      // Make entry in db
-      const dateString = new Date().toISOString();
-      const userData = { emailVerified: true, updatedAt: dateString };
-      const objKeys = Object.keys(userData);
-
-      const updateUserParams: UpdateItemCommandInput = {
-        TableName: process.env.FORM_BUILDER_DATA_TABLE,
-        Key: marshall({ pk: `o#${username}`, sk: "A" }),
-        UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`)}`,
-        ExpressionAttributeNames: objKeys.reduce(
-          (acc, key, index) => ({ ...acc, [`#key${index}`]: key }),
-          {}
-        ),
-        ExpressionAttributeValues: marshall(
-          objKeys.reduce(
-            (acc, key, index) => ({
-              ...acc,
-              [`:value${index}`]: userData[key],
-            }),
-            {}
-          )
-        ),
-      };
-      await db.send(new UpdateItemCommand(updateUserParams));
-
       // Send email
       let template = fs.readFileSync(dirPath + "accountConfirmedEmail.html", "utf8");
 

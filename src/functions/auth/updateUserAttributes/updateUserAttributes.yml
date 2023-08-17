@@ -19,7 +19,3 @@ updateUserAttributes:
       Action:
         - "cognito-idp:UpdateUserAttributes"
       Resource: !GetAtt CognitoUserPool.Arn
-    - Effect: Allow
-      Action:
-        - "dynamodb:UpdateItem"
-      Resource: !GetAtt FormBuilderDataTable.Arn
