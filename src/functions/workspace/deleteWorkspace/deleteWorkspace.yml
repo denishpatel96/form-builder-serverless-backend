@@ -22,4 +22,4 @@ deleteWorkspace:
     - Effect: Allow
       Action:
         - "dynamodb:GetItem"
-      Resource: !GetAtt WorkspaceRolesTable.Arn
+      Resource: !GetAtt WorkspaceMembersTable.Arn

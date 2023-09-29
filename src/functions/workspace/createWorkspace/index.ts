@@ -40,7 +40,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       orgId: orgId,
       workspaceId: workspaceId,
       name: workspaceName.substr(0, CHARACTER_LIMIT),
-      memberCount: claimedUsername !== orgId ? 1 : 0,
+      memberCount: claimedUsername !== orgId ? 2 : 1,
       formCount: 0,
       responseCount: 0,
       createdAt: dateString,
@@ -59,7 +59,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       await db.send(new PutItemCommand(wsParams));
     } else {
       const params: GetItemCommandInput = {
-        TableName: process.env.ORGANIZATION_ROLES_TABLE,
+        TableName: process.env.ORG_MEMBERS_TABLE,
         Key: marshall({
           orgId: orgId,
           userId: claimedUsername,
@@ -67,7 +67,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       };
       const { Item } = await db.send(new GetItemCommand(params));
       const userData = Item ? unmarshall(Item) : null;
-      if (!(userData && (userData.role === "editor" || userData.role === "admin"))) {
+      if (!(userData && (userData.role === "Editor" || userData.role === "Admin"))) {
         return {
           statusCode: 403,
           ...corsHeaders,
@@ -98,7 +98,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
               },
             },
           ],
-          [process.env.WORKSPACE_ROLES_TABLE]: [
+          [process.env.WORKSPACE_MEMBERS_TABLE]: [
             {
               PutRequest: {
                 Item: marshall(wsMemberData),
@@ -125,7 +125,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       ...corsHeaders,
       body: JSON.stringify({
         message: "Workspace created successfully!",
-        id: workspaceData.workspaceId,
+        workspaceId: workspaceData.workspaceId,
       }),
     };
   } catch (e) {

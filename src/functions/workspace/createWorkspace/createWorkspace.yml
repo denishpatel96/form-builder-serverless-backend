@@ -24,4 +24,4 @@ createWorkspace:
     - Effect: Allow
       Action:
         - "dynamodb:GetItem"
-      Resource: !GetAtt OrganizationRolesTable.Arn
+      Resource: !GetAtt OrgMembersTable.Arn

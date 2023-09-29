@@ -1,0 +1,7 @@
+{
+  "name": "post-delete-workspace",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function triggered after workspace is deleted in dynamodb table",
+  "author": "Denish Patel"
+}

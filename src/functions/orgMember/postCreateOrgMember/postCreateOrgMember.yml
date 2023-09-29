@@ -1,0 +1,23 @@
+postCreateOrgMember:
+  handler: ./dist/orgMember/postCreateOrgMember/index.handler
+  package:
+    patterns:
+      - "dist/orgMember/postCreateOrgMember/**"
+      - "!dist/orgMember/postCreateOrgMember/**/*.ts"
+      - "!dist/orgMember/postCreateOrgMember/**/*.yml"
+  name: post-create-org-member-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - stream:
+        type: dynamodb
+        batchSize: 1
+        startingPosition: LATEST
+        arn: !GetAtt OrgMembersTable.StreamArn
+        filterPatterns:
+          - eventName: [INSERT]
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource: !GetAtt UsersTable.Arn

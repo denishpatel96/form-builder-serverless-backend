@@ -1,0 +1,22 @@
+deleteOrgMember:
+  handler: dist/orgMember/deleteOrgMember/index.handler
+  package:
+    patterns:
+      - "dist/orgMember/deleteOrgMember/**"
+      - "!dist/orgMember/deleteOrgMember/**/*.ts"
+      - "!dist/orgMember/deleteOrgMember/**/*.yml"
+  name: delete-org-member-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /members/{orgId}/{userId}
+        method: DELETE
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:DeleteItem"
+        - "dynamodb:GetItem"
+      Resource: !GetAtt OrgMembersTable.Arn

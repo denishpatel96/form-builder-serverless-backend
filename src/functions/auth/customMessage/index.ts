@@ -5,7 +5,7 @@ export const handler: CustomMessageTriggerHandler = async (event) => {
   try {
     const { email, given_name: firstName } = event.request.userAttributes;
     const username = event.userName;
-    const url = process.env.STAGE === "prod" ? "https://vtwinforms.com" : "http://localhost:3000";
+    const url = process.env.STAGE === "prod" ? "https://vtwinsform.com" : "http://localhost:3000";
     const code = event.request.codeParameter;
     const dirPath = process.env.LAMBDA_TASK_ROOT
       ? process.env.LAMBDA_TASK_ROOT + "/dist/auth/customMessage/"
@@ -23,7 +23,7 @@ export const handler: CustomMessageTriggerHandler = async (event) => {
       template = template.replace("$LINK$", link);
 
       event.response = {
-        smsMessage: `vTwinForms Account Verification Link: ${link}`,
+        smsMessage: `vTwinsForm Account Verification Link: ${link}`,
         emailSubject: `${
           event.triggerSource === "CustomMessage_ResendCode" ? "Resent: " : ""
         }Confirm Your Account`,
@@ -38,7 +38,7 @@ export const handler: CustomMessageTriggerHandler = async (event) => {
       template = template.replace("$LINK$", link);
 
       event.response = {
-        smsMessage: `vTwinForms Reset Password Link: ${link}`,
+        smsMessage: `vTwinsForm Reset Password Link: ${link}`,
         emailSubject: `Reset Password`,
         emailMessage: template,
       };
@@ -52,7 +52,7 @@ export const handler: CustomMessageTriggerHandler = async (event) => {
       template = template.replace("$VERIFICATION_CODE$", code);
 
       event.response = {
-        smsMessage: `vTwinForms Email Verification Code: ${code}`,
+        smsMessage: `vTwinsForm Email Verification Code: ${code}`,
         emailSubject: `Email Verification Code`,
         emailMessage: template,
       };

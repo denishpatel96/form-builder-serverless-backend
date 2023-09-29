@@ -19,4 +19,4 @@ getOrgMembers:
       Action:
         - "dynamodb:Query"
       Resource:
-        - Fn::GetAtt: [OrganizationRolesTable, Arn]
+        - Fn::GetAtt: [OrgMembersTable, Arn]

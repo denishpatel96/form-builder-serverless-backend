@@ -25,7 +25,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const params: GetItemCommandInput = {
       TableName: process.env.USERS_TABLE,
       Key: marshall({
-        id: claimedUsername,
+        userId: claimedUsername,
       }),
     };
     const { Item } = await db.send(new GetItemCommand(params));

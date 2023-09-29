@@ -31,7 +31,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     if (orgId !== claimedUsername) {
       const params: GetItemCommandInput = {
-        TableName: process.env.ORGANIZATION_ROLES_TABLE,
+        TableName: process.env.ORG_MEMBERS_TABLE,
         Key: marshall({
           orgId: orgId,
           userId: claimedUsername,
@@ -52,7 +52,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     let items: Record<string, AttributeValue>[] = [];
     const recursiveQuery = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
       const params: QueryCommandInput = {
-        TableName: process.env.ORGANIZATION_ROLES_TABLE,
+        TableName: process.env.ORG_MEMBERS_TABLE,
         ExclusiveStartKey: lastEvaluatedKey,
         KeyConditionExpression: "orgId = :orgId",
         ExpressionAttributeValues: marshall({

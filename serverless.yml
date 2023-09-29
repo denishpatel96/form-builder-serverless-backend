@@ -14,9 +14,10 @@ provider:
     STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
     USERS_TABLE: ${self:custom.usersTableName}
-    ORGANIZATION_ROLES_TABLE: ${self:custom.organizationRolesTableName}
+    ORG_MEMBERS_TABLE: ${self:custom.orgMembersTableName}
+    ORG_MEMBER_INVITATIONS_TABLE: ${self:custom.orgMemberInvitationsTableName}
     WORKSPACES_TABLE: ${self:custom.workspacesTableName}
-    WORKSPACE_ROLES_TABLE: ${self:custom.workspaceRolesTableName}
+    WORKSPACE_MEMBERS_TABLE: ${self:custom.workspaceMembersTableName}
     USER_POOL_ID: !Ref CognitoUserPool
     USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
   httpApi:
@@ -45,10 +46,11 @@ plugins:
 custom:
   # dynamodb tables
   usersTableName: users-table-${self:provider.stage}
-  organizationRolesTableName: organization-roles-table-${self:provider.stage}
+  orgMembersTableName: org-members-table-${self:provider.stage}
   workspacesTableName: workspaces-table-${self:provider.stage}
-  workspaceRolesTableName: workspace-roles-table-${self:provider.stage}
+  workspaceMembersTableName: workspace-members-table-${self:provider.stage}
   formsTableName: forms-table-${self:provider.stage}
+  orgMemberInvitationsTableName: org-member-invitations-table-${self:provider.stage}
   # cognito user pool
   userPoolName: form-builder-user-pool-${self:provider.stage}
   # cognito user pool client
@@ -60,24 +62,29 @@ custom:
     maxRequestsPerSecond: 5
     maxConcurrentRequests: 5
   apiDomain:
-    dev: dev-api.vtwinforms.com
-    prod: api.vtwinforms.com
+    dev: dev-api.vtwinsform.com
+    prod: api.vtwinsform.com
   # required by serverless-domain-manger plugin for apigateway
   customDomain:
     http:
       domainName: ${self:custom.apiDomain.${self:provider.stage}}
       basePath: ""
       stage: ${self:provider.stage}
-      certificateName: vtwinforms.com
+      certificateName: vtwinsform.com
       endpointType: regional
       createRoute53Record: false
 
 functions:
-  - ${file(./src/functions/orgMember/inviteOrgMember/inviteOrgMember.yml)}
   - ${file(./src/functions/orgMember/getOrgMembers/getOrgMembers.yml)}
+  - ${file(./src/functions/orgMember/updateOrgMember/updateOrgMember.yml)}
+  - ${file(./src/functions/orgMember/deleteOrgMember/deleteOrgMember.yml)}
+  - ${file(./src/functions/orgMemberInvitation/createOrgMemberInvitation/createOrgMemberInvitation.yml)}
+  - ${file(./src/functions/orgMemberInvitation/deleteOrgMemberInvitation/deleteOrgMemberInvitation.yml)}
+  - ${file(./src/functions/orgMemberInvitation/getOrgMemberInvitations/getOrgMemberInvitations.yml)}
+  - ${file(./src/functions/orgMemberInvitation/respondToOrgMemberInvitation/respondToOrgMemberInvitation.yml)}
   - ${file(./src/functions/user/getUser/getUser.yml)}
   - ${file(./src/functions/user/updateUser/updateUser.yml)}
-  - ${file(./src/functions/user/postModifyUser/postModifyUser.yml)}
+  - ${file(./src/functions/user/postUpdateUser/postUpdateUser.yml)}
   - ${file(./src/functions/workspace/getWorkspaces/getWorkspaces.yml)}
   - ${file(./src/functions/workspace/createWorkspace/createWorkspace.yml)}
   - ${file(./src/functions/workspace/updateWorkspace/updateWorkspace.yml)}
@@ -108,10 +115,10 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         KeySchema:
-          - AttributeName: id
+          - AttributeName: userId
             KeyType: HASH
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: userId
             AttributeType: S
           - AttributeName: email
             AttributeType: S
@@ -126,7 +133,7 @@ resources:
         TableName: ${self:custom.usersTableName}
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
-    OrganizationRolesTable:
+    OrgMembersTable:
       Type: AWS::DynamoDB::Table
       Properties:
         KeySchema:
@@ -149,7 +156,7 @@ resources:
             Projection:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:custom.organizationRolesTableName}
+        TableName: ${self:custom.orgMembersTableName}
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
     WorkspacesTable:
@@ -169,7 +176,7 @@ resources:
         TableName: ${self:custom.workspacesTableName}
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
-    WorkspaceRolesTable:
+    WorkspaceMembersTable:
       Type: AWS::DynamoDB::Table
       Properties:
         KeySchema:
@@ -192,7 +199,33 @@ resources:
             Projection:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:custom.workspaceRolesTableName}
+        TableName: ${self:custom.workspaceMembersTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    OrgMemberInvitationsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: orgId
+            KeyType: HASH
+          - AttributeName: email
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+          - AttributeName: orgId
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: email-orgId-index
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+              - AttributeName: orgId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.orgMemberInvitationsTableName}
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
     FormsTable:
@@ -240,9 +273,9 @@ resources:
         DeletionProtection: INACTIVE
         EmailConfiguration:
           EmailSendingAccount: DEVELOPER
-          SourceArn: arn:aws:ses:us-west-2:954569320321:identity/vtwinforms.com
-          From: vTwinForms <denish@vtwinforms.com>
-          ReplyToEmailAddress: denish@vtwinforms.com
+          SourceArn: arn:aws:ses:us-west-2:954569320321:identity/vtwinsform.com
+          From: vTwinsForm <denish@vtwinsform.com>
+          ReplyToEmailAddress: denish@vtwinsform.com
         Policies:
           PasswordPolicy:
             MinimumLength: 8

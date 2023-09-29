@@ -16,7 +16,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
     const orgId = record.dynamodb.NewImage.orgId.S;
     const params: UpdateItemCommandInput = {
       TableName: process.env.USERS_TABLE,
-      Key: marshall({ id: orgId }),
+      Key: marshall({ userId: orgId }),
       UpdateExpression: `SET workspaceCount = if_not_exists(workspaceCount, :start) + :inc`,
       ExpressionAttributeValues: marshall({
         ":inc": 1,

@@ -50,10 +50,15 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     // Make entries in db
 
     const userData = {
-      id: userId,
+      userId,
       firstName,
       lastName,
       email,
+      orgName: email.substr(0, email.indexOf("@")),
+      memberCount: 0,
+      workspaceCount: 0,
+      formCount: 0,
+      responseCount: 0,
       createdAt: dateString,
       updatedAt: dateString,
     };
@@ -67,7 +72,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify({ email, id: userId }),
+      body: JSON.stringify({ email, userId }),
     };
   } catch (e) {
     console.error(e);

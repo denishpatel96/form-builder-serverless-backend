@@ -24,7 +24,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       const orgId = record.dynamodb.OldImage.orgId.S;
       const updateparams: UpdateItemCommandInput = {
         TableName: process.env.USERS_TABLE,
-        Key: marshall({ id: orgId }),
+        Key: marshall({ userId: orgId }),
         UpdateExpression: `SET workspaceCount = if_not_exists(workspaceCount, :start) - :decrement`,
         ExpressionAttributeValues: marshall({
           ":decrement": 1,
@@ -40,7 +40,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       let items: Record<string, AttributeValue>[] = [];
       const recursiveQuery1 = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
         const params: QueryCommandInput = {
-          TableName: process.env.WORKSPACE_ROLES_TABLE,
+          TableName: process.env.WORKSPACE_MEMBERS_TABLE,
           ExclusiveStartKey: lastEvaluatedKey,
           KeyConditionExpression: "workspaceId = :workspaceId",
           ExpressionAttributeValues: marshall({
@@ -78,7 +78,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
 
       // batch delete all the data
       let requestItems = {
-        [process.env.WORKSPACE_ROLES_TABLE]: workspaceRolesToDelete.map((i) => {
+        [process.env.WORKSPACE_MEMBERS_TABLE]: workspaceRolesToDelete.map((i) => {
           return {
             DeleteRequest: {
               Key: marshall({

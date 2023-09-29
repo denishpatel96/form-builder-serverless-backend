@@ -1,0 +1,7 @@
+{
+  "name": "update-org-member",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to update org member",
+  "author": "Denish Patel"
+}

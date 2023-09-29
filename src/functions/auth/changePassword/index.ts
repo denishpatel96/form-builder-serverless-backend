@@ -41,7 +41,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     await client.send(new ChangePasswordCommand(params));
 
     // Send email
-    const url = process.env.STAGE === "prod" ? "https://vtwinforms.com" : "http://localhost:3000";
+    const url = process.env.STAGE === "prod" ? "https://vtwinsform.com" : "http://localhost:3000";
     const link = url + `/forgotPassword?email=${email}`;
     let template = fs.readFileSync(dirPath + "passwordChangedEmail.html", "utf8");
     template = template.replace("$USER_NAME$", firstName);
@@ -83,7 +83,7 @@ const sendEmail = async (to: string, subject: string, body: string) => {
       },
     },
     // Replace source_email with your SES validated email address
-    Source: "vTwinForms <denish@vtwinforms.com>",
+    Source: "vTwinsForm <denish@vtwinsform.com>",
   };
   try {
     await ses.send(new SendEmailCommand(params));

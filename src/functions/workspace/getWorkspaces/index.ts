@@ -32,7 +32,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       // Get Org Role
       const { Item } = await db.send(
         new GetItemCommand({
-          TableName: process.env.ORGANIZATION_ROLES_TABLE,
+          TableName: process.env.ORG_MEMBERS_TABLE,
           Key: marshall({
             orgId: orgId,
             userId: claimedUsername,
@@ -51,7 +51,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       }
 
       const params: QueryCommandInput = {
-        TableName: process.env.WORKSPACE_ROLES_TABLE,
+        TableName: process.env.WORKSPACE_MEMBERS_TABLE,
         IndexName: "userId-workspaceId-index",
         KeyConditionExpression: "userId = :userId",
         ExpressionAttributeValues: marshall({

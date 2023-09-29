@@ -18,7 +18,7 @@ updateWorkspace:
     - Effect: Allow
       Action:
         - "dynamodb:GetItem"
-      Resource: !GetAtt WorkspaceRolesTable.Arn
+      Resource: !GetAtt WorkspaceMembersTable.Arn
     - Effect: Allow
       Action:
         - "dynamodb:UpdateItem"

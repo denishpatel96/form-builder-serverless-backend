@@ -39,7 +39,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     ];
     const updateUserParams: UpdateItemCommandInput = {
       TableName: process.env.USERS_TABLE,
-      Key: marshall({ id: username }),
+      Key: marshall({ userId: username }),
       UpdateExpression: `SET ${objKeys.map((key, index) =>
         notAllowedAttributes.includes(key) ? "" : `#key${index} = :value${index}`
       )}`,

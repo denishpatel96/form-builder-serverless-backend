@@ -26,5 +26,5 @@ postDeleteWorkspace:
         - "dynamodb:Query"
         - "dynamodb:BatchWriteItem"
       Resource:
-        - Fn::GetAtt: [WorkspaceRolesTable, Arn]
+        - Fn::GetAtt: [WorkspaceMembersTable, Arn]
         - Fn::GetAtt: [FormsTable, Arn]

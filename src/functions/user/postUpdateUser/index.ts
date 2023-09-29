@@ -31,7 +31,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       let items: Record<string, AttributeValue>[] = [];
       const recursiveQuery = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
         const params: QueryCommandInput = {
-          TableName: process.env.ORGANIZATION_ROLES_TABLE,
+          TableName: process.env.ORG_MEMBERS_TABLE,
           ExclusiveStartKey: lastEvaluatedKey,
           KeyConditionExpression: "orgId = :orgId",
           ExpressionAttributeValues: marshall({
@@ -53,7 +53,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       for (let item of items) {
         const objKeys = Object.keys(updates);
         const updateParams: UpdateItemCommandInput = {
-          TableName: process.env.ORGANIZATION_ROLES_TABLE,
+          TableName: process.env.ORG_MEMBERS_TABLE,
           Key: marshall({ orgId: item.orgId.S, userId: item.userId.S }),
           UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`)}`,
           ExpressionAttributeNames: objKeys.reduce(
@@ -90,7 +90,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       let items: Record<string, AttributeValue>[] = [];
       const recursiveQuery1 = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
         const params: QueryCommandInput = {
-          TableName: process.env.ORGANIZATION_ROLES_TABLE,
+          TableName: process.env.ORG_MEMBERS_TABLE,
           IndexName: "userId-orgId-index",
           ExclusiveStartKey: lastEvaluatedKey,
           KeyConditionExpression: "userId = :userId",
@@ -116,7 +116,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       for (let item of items) {
         const objKeys = Object.keys(updates);
         const updateParams: UpdateItemCommandInput = {
-          TableName: process.env.ORGANIZATION_ROLES_TABLE,
+          TableName: process.env.ORG_MEMBERS_TABLE,
           Key: marshall({ orgId: item.orgId.S, userId: item.userId.S }),
           UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`)}`,
           ExpressionAttributeNames: objKeys.reduce(
@@ -146,7 +146,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       items = [];
       const recursiveQuery2 = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
         const params: QueryCommandInput = {
-          TableName: process.env.WORKSPACE_ROLES_TABLE,
+          TableName: process.env.WORKSPACE_MEMBERS_TABLE,
           IndexName: "userId-workspaceId-index",
           ExclusiveStartKey: lastEvaluatedKey,
           KeyConditionExpression: "userId = :userId",
@@ -168,7 +168,7 @@ export const handler: DynamoDBStreamHandler = async (event, _context, _callback)
       for (let item of items) {
         const objKeys = Object.keys(updates);
         const updateParams: UpdateItemCommandInput = {
-          TableName: process.env.WORKSPACE_ROLES_TABLE,
+          TableName: process.env.WORKSPACE_MEMBERS_TABLE,
           Key: marshall({ workspaceId: item.workspaceId.S, userId: item.userId.S }),
           UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`)}`,
           ExpressionAttributeNames: objKeys.reduce(

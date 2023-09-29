@@ -1,0 +1,33 @@
+respondToOrgMemberInvitation:
+  handler: dist/orgMemberInvitation/respondToOrgMemberInvitation/index.handler
+  package:
+    patterns:
+      - "dist/orgMemberInvitation/respondToOrgMemberInvitation/**"
+      - "!dist/orgMemberInvitation/respondToOrgMemberInvitation/**/*.ts"
+      - "!dist/orgMemberInvitation/respondToOrgMemberInvitation/**/*.yml"
+  name: respond-to-org-member-invitation-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /memberInvitations/respond
+        method: POST
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+      Resource:
+        - Fn::GetAtt: [OrgMembersTable, Arn]
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:DeleteItem"
+      Resource:
+        - Fn::GetAtt: [OrgMemberInvitationsTable, Arn]
+    - Effect: Allow
+      Action:
+        - "ses:SendEmail"
+        - "ses:SendRawEmail"
+      Resource: arn:aws:ses:us-west-2:954569320321:identity/*

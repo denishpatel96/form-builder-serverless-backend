@@ -1,11 +1,11 @@
-postModifyUser:
-  handler: ./dist/user/postModifyUser/index.handler
+postUpdateUser:
+  handler: ./dist/user/postUpdateUser/index.handler
   package:
     patterns:
-      - "dist/user/postModifyUser/**"
-      - "!dist/user/postModifyUser/**/*.ts"
-      - "!dist/user/postModifyUser/**/*.yml"
-  name: post-modify-user-${self:provider.stage}
+      - "dist/user/postUpdateUser/**"
+      - "!dist/user/postUpdateUser/**/*.ts"
+      - "!dist/user/postUpdateUser/**/*.yml"
+  name: post-update-user-${self:provider.stage}
   memorySize: 128 # mb
   timeout: 5 # seconds
   events:
@@ -22,17 +22,16 @@ postModifyUser:
         - "dynamodb:UpdateItem"
         - "dynamodb:Query"
       Resource:
-        - Fn::GetAtt: [OrganizationRolesTable, Arn]
+        - Fn::GetAtt: [OrgMembersTable, Arn]
     - Effect: Allow
       Action:
         - "dynamodb:UpdateItem"
       Resource:
-        - Fn::GetAtt: [WorkspaceRolesTable, Arn]
+        - Fn::GetAtt: [WorkspaceMembersTable, Arn]
     - Effect: Allow
       Action:
         - "dynamodb:Query"
       Resource:
+        - Fn::Join: ["/", [Fn::GetAtt: [OrgMembersTable, Arn], "index", "userId-orgId-index"]]
         - Fn::Join:
-            ["/", [Fn::GetAtt: [OrganizationRolesTable, Arn], "index", "userId-orgId-index"]]
-        - Fn::Join:
-            ["/", [Fn::GetAtt: [WorkspaceRolesTable, Arn], "index", "userId-workspaceId-index"]]
+            ["/", [Fn::GetAtt: [WorkspaceMembersTable, Arn], "index", "userId-workspaceId-index"]]

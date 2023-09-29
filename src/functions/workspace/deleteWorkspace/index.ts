@@ -30,7 +30,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     if (claimedUsername !== orgId) {
       const params: GetItemCommandInput = {
-        TableName: process.env.WORKSPACE_ROLES_TABLE,
+        TableName: process.env.WORKSPACE_MEMBERS_TABLE,
         Key: marshall({
           workspaceId: workspaceId,
           userId: claimedUsername,

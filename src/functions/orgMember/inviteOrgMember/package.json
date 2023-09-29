@@ -1,7 +1,0 @@
-{
-  "name": "invite-org-member",
-  "version": "1.0.0",
-  "type": "module",
-  "description": "lambda function to invite organization member",
-  "author": "Denish Patel"
-}

@@ -19,11 +19,11 @@ getWorkspaces:
       Action:
         - "dynamodb:GetItem"
       Resource:
-        - Fn::GetAtt: [OrganizationRolesTable, Arn]
+        - Fn::GetAtt: [OrgMembersTable, Arn]
     - Effect: Allow
       Action:
         - "dynamodb:Query"
       Resource:
         - Fn::GetAtt: [WorkspacesTable, Arn]
         - Fn::Join:
-            ["/", [Fn::GetAtt: [WorkspaceRolesTable, Arn], "index", "userId-workspaceId-index"]]
+            ["/", [Fn::GetAtt: [WorkspaceMembersTable, Arn], "index", "userId-workspaceId-index"]]
