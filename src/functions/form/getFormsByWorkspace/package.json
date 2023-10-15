@@ -1,0 +1,7 @@
+{
+  "name": "get-orgs-by-user",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to get organizations user is member of.",
+  "author": "Denish Patel"
+}

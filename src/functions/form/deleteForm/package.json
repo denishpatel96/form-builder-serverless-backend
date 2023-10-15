@@ -1,0 +1,7 @@
+{
+  "name": "delete-form",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to delete form",
+  "author": "Denish Patel"
+}

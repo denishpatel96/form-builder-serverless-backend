@@ -1,0 +1,25 @@
+updateForm:
+  handler: dist/form/updateForm/index.handler
+  package:
+    patterns:
+      - "dist/form/updateForm/**"
+      - "!dist/form/updateForm/**/*.ts"
+      - "!dist/form/updateForm/**/*.yml"
+  name: update-form-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /forms
+        method: PUT
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt WorkspaceMembersTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource: !GetAtt FormsTable.Arn

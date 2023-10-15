@@ -2,6 +2,7 @@ import {
   AttributeValue,
   DynamoDBClient,
   GetItemCommand,
+  GetItemCommandInput,
   QueryCommand,
   QueryCommandInput,
 } from "@aws-sdk/client-dynamodb";
@@ -17,64 +18,49 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     },
   };
   try {
+    const { orgId, workspaceId } = event.pathParameters;
     const claimedUsername = event.requestContext.authorizer?.jwt.claims["cognito:username"];
-    const { orgId } = event.pathParameters;
-    if (!orgId) {
+
+    if (!(orgId && workspaceId)) {
       return {
         statusCode: 400,
         ...corsHeaders,
-        body: JSON.stringify({ message: "orgId is required" }),
+        body: JSON.stringify({ message: "orgId and workspaceId are required" }),
       };
     }
 
-    let allowedWorkspaces: string[];
-    if (orgId !== claimedUsername) {
-      // Get Org Role
-      const { Item } = await db.send(
-        new GetItemCommand({
-          TableName: process.env.ORG_MEMBERS_TABLE,
-          Key: marshall({
-            orgId: orgId,
-            userId: claimedUsername,
-          }),
-        })
-      );
-
+    if (claimedUsername !== orgId) {
+      const params: GetItemCommandInput = {
+        TableName: process.env.WORKSPACE_MEMBERS_TABLE,
+        Key: marshall({
+          workspaceId: workspaceId,
+          userId: claimedUsername,
+        }),
+      };
+      const { Item } = await db.send(new GetItemCommand(params));
       if (!Item) {
         return {
           statusCode: 403,
           ...corsHeaders,
           body: JSON.stringify({
-            message: "Only member can view workspaces for this organization.",
+            message: "You are not authorized to get the forms of this workspace.",
           }),
         };
       }
-
-      const params: QueryCommandInput = {
-        TableName: process.env.WORKSPACE_MEMBERS_TABLE,
-        IndexName: "userId-workspaceId-index",
-        KeyConditionExpression: "userId = :userId",
-        ExpressionAttributeValues: marshall({
-          ":userId": claimedUsername,
-        }),
-      };
-      const { Items } = await db.send(new QueryCommand(params));
-      allowedWorkspaces = Items.map((i) => unmarshall(i)).map((i) => i.workspaceId);
     }
 
-    let items: Record<string, AttributeValue>[] = [];
+    let forms: Record<string, AttributeValue>[] = [];
     const recursiveQuery = async (lastEvaluatedKey?: Record<string, AttributeValue>) => {
       const params: QueryCommandInput = {
-        TableName: process.env.WORKSPACES_TABLE,
+        TableName: process.env.FORMS_TABLE,
         ExclusiveStartKey: lastEvaluatedKey,
-        KeyConditionExpression: "orgId = :orgId",
+        KeyConditionExpression: "workspaceId = :workspaceId",
         ExpressionAttributeValues: marshall({
-          ":orgId": orgId,
+          ":workspaceId": workspaceId, // userId is same as orgId
         }),
-        ScanIndexForward: false,
       };
       const { Items, LastEvaluatedKey } = await db.send(new QueryCommand(params));
-      Items.forEach((i) => items.push(i));
+      Items.forEach((i) => forms.push(unmarshall(i)));
       if (LastEvaluatedKey) {
         await recursiveQuery(LastEvaluatedKey);
       }
@@ -82,15 +68,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     await recursiveQuery();
 
-    const workspaceData = items
-      .map((i) => unmarshall(i))
-      .filter((i) =>
-        orgId !== claimedUsername ? allowedWorkspaces.includes(i.workspaceId) : true
-      );
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify(workspaceData),
+      body: JSON.stringify(forms),
     };
   } catch (e) {
     console.error(e);

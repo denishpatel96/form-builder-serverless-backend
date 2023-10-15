@@ -17,6 +17,7 @@ getOrgMembers:
   iamRoleStatements:
     - Effect: Allow
       Action:
+        - "dynamodb:GetItem"
         - "dynamodb:Query"
       Resource:
         - Fn::GetAtt: [OrgMembersTable, Arn]
