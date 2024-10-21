@@ -19,5 +19,10 @@ signup:
       Resource: !GetAtt UsersTable.Arn
     - Effect: Allow
       Action:
+        - "dynamodb:Query"
+      Resource:
+        - Fn::Join: ["/", [Fn::GetAtt: [UsersTable, Arn], "index", "email-index"]]
+    - Effect: Allow
+      Action:
         - "cognito-idp:SignUp"
       Resource: !GetAtt CognitoUserPool.Arn

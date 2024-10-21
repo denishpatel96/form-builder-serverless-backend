@@ -3,7 +3,7 @@ import {
   CognitoIdentityProviderClient,
   SignUpCommandInput,
 } from "@aws-sdk/client-cognito-identity-provider";
-import { DynamoDBClient, PutItemCommand, PutItemCommandInput } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, PutItemCommandInput, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 import { ulid } from "ulid";
@@ -26,6 +26,27 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         statusCode: 400,
         ...corsHeaders,
         body: JSON.stringify({ message: "first name, last name, email and password required" }),
+      };
+    }
+
+    // Check whether user with email already exists or not.
+
+    const { Items: users } = await db.send(
+      new QueryCommand({
+        TableName: process.env.USERS_TABLE,
+        IndexName: "email-index",
+        KeyConditionExpression: "email = :email",
+        ExpressionAttributeValues: marshall({
+          ":email": email,
+        }),
+      })
+    );
+
+    if (users && users.length > 0) {
+      return {
+        statusCode: 400,
+        ...corsHeaders,
+        body: JSON.stringify({ message: "user with given email already exists" }),
       };
     }
 
