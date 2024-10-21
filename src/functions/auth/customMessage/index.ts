@@ -5,16 +5,13 @@ export const handler: CustomMessageTriggerHandler = async (event) => {
   try {
     const { email, given_name: firstName } = event.request.userAttributes;
     const username = event.userName;
-    const url = process.env.STAGE === "prod" ? "https://vtwinsform.com" : "http://localhost:3000";
+    const url = process.env.STAGE === "prod" ? "https://BrownLama.com" : "http://localhost:3000";
     const code = event.request.codeParameter;
     const dirPath = process.env.LAMBDA_TASK_ROOT
       ? process.env.LAMBDA_TASK_ROOT + "/dist/auth/customMessage/"
       : __dirname;
 
-    if (
-      event.triggerSource === "CustomMessage_SignUp" ||
-      event.triggerSource === "CustomMessage_ResendCode"
-    ) {
+    if (event.triggerSource === "CustomMessage_SignUp" || event.triggerSource === "CustomMessage_ResendCode") {
       const link = url + `/confirmSignup?code=${code}&username=${username}`;
 
       let template = fs.readFileSync(dirPath + "signupEmail.html", "utf8");
@@ -23,10 +20,8 @@ export const handler: CustomMessageTriggerHandler = async (event) => {
       template = template.replace("$LINK$", link);
 
       event.response = {
-        smsMessage: `vTwinsForm Account Verification Link: ${link}`,
-        emailSubject: `${
-          event.triggerSource === "CustomMessage_ResendCode" ? "Resent: " : ""
-        }Confirm Your Account`,
+        smsMessage: `BrownLama Account Verification Link: ${link}`,
+        emailSubject: `${event.triggerSource === "CustomMessage_ResendCode" ? "Resent: " : ""}Confirm Your Account`,
         emailMessage: template,
       };
     } else if (event.triggerSource === "CustomMessage_ForgotPassword") {
@@ -38,7 +33,7 @@ export const handler: CustomMessageTriggerHandler = async (event) => {
       template = template.replace("$LINK$", link);
 
       event.response = {
-        smsMessage: `vTwinsForm Reset Password Link: ${link}`,
+        smsMessage: `BrownLama Reset Password Link: ${link}`,
         emailSubject: `Reset Password`,
         emailMessage: template,
       };
@@ -52,7 +47,7 @@ export const handler: CustomMessageTriggerHandler = async (event) => {
       template = template.replace("$VERIFICATION_CODE$", code);
 
       event.response = {
-        smsMessage: `vTwinsForm Email Verification Code: ${code}`,
+        smsMessage: `BrownLama Email Verification Code: ${code}`,
         emailSubject: `Email Verification Code`,
         emailMessage: template,
       };

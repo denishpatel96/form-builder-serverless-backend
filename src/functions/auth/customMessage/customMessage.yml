@@ -12,5 +12,6 @@ customMessage:
     - cognitoUserPool:
         pool: ${self:custom.userPoolName}
         trigger: CustomMessage
+        # use below settings if modifying existing
         existing: true
         forceDeploy: true

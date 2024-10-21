@@ -8,7 +8,9 @@ import { SES, SendEmailCommand, SendEmailCommandInput } from "@aws-sdk/client-se
 import { APIGatewayProxyHandler } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  const client = new CognitoIdentityProviderClient({ region: process.env.REGION });
+  const client = new CognitoIdentityProviderClient({
+    region: process.env.REGION,
+  });
   const corsHeaders = {
     headers: {
       "Access-Control-Allow-Origin": "*",
@@ -41,7 +43,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     await client.send(new ChangePasswordCommand(params));
 
     // Send email
-    const url = process.env.STAGE === "prod" ? "https://vtwinsform.com" : "http://localhost:3000";
+    const url = process.env.STAGE === "prod" ? "https://brownlama.com" : "http://localhost:3000";
     const link = url + `/forgotPassword?email=${email}`;
     let template = fs.readFileSync(dirPath + "passwordChangedEmail.html", "utf8");
     template = template.replace("$USER_NAME$", firstName);
@@ -60,7 +62,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: e?.$metadata?.httpStatusCode || 500,
       ...corsHeaders,
-      body: JSON.stringify({ name: e.name, message: e.message, stack: e.stack }),
+      body: JSON.stringify({
+        name: e.name,
+        message: e.message,
+        stack: e.stack,
+      }),
     };
   }
 };
@@ -83,7 +89,7 @@ const sendEmail = async (to: string, subject: string, body: string) => {
       },
     },
     // Replace source_email with your SES validated email address
-    Source: "vTwinsForm <denish@vtwinsform.com>",
+    Source: "BrownLama <denish@brownlama.com>",
   };
   try {
     await ses.send(new SendEmailCommand(params));

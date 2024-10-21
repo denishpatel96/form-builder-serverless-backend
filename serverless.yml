@@ -63,15 +63,15 @@ custom:
     maxRequestsPerSecond: 5
     maxConcurrentRequests: 5
   apiDomain:
-    dev: dev-api.vtwinsform.com
-    prod: api.vtwinsform.com
+    dev: dev-api.brownlama.com
+    prod: api.brownlama.com
   # required by serverless-domain-manger plugin for apigateway
   customDomain:
     http:
       domainName: ${self:custom.apiDomain.${self:provider.stage}}
       basePath: ""
       stage: ${self:provider.stage}
-      certificateName: vtwinsform.com
+      certificateName: brownlama.com
       endpointType: regional
       createRoute53Record: false
 
@@ -279,9 +279,9 @@ resources:
         DeletionProtection: INACTIVE
         EmailConfiguration:
           EmailSendingAccount: DEVELOPER
-          SourceArn: arn:aws:ses:us-west-2:954569320321:identity/vtwinsform.com
-          From: vTwinsForm <denish@vtwinsform.com>
-          ReplyToEmailAddress: denish@vtwinsform.com
+          SourceArn: arn:aws:ses:us-west-2:954569320321:identity/brownlama.com
+          From: BrownLama <denish@brownlama.com>
+          ReplyToEmailAddress: denish@brownlama.com
         Policies:
           PasswordPolicy:
             MinimumLength: 8

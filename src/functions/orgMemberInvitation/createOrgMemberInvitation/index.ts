@@ -1,10 +1,5 @@
 import * as fs from "fs";
-import {
-  DynamoDBClient,
-  GetItemCommand,
-  PutItemCommand,
-  QueryCommand,
-} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, PutItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { SES, SendEmailCommandInput, SendEmailCommand } from "@aws-sdk/client-ses";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
@@ -119,7 +114,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       ? process.env.LAMBDA_TASK_ROOT + "/dist/orgMemberInvitation/createOrgMemberInvitation/"
       : __dirname;
 
-    const url = process.env.STAGE === "prod" ? "https://vtwinsform.com" : "http://localhost:3000";
+    const url = process.env.STAGE === "prod" ? "https://BrownLama.com" : "http://localhost:3000";
     const link = url + `/login`;
     const inviterName = `${inviter.firstName} ${inviter.lastName}`;
     const orgName = inviter.orgName;
@@ -148,7 +143,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     template = template.replace(/\$ROLE\$/g, role);
     template = template.replace(/\$PERMISSIONS\$/g, permissions);
     template = template.replace(/\$LINK\$/g, link);
-    await sendEmail(email, `You're invited to collaborate on vTwinsForm`, template);
+    await sendEmail(email, `You're invited to collaborate on BrownLama`, template);
 
     return {
       statusCode: 200,
@@ -162,7 +157,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: e?.$metadata?.httpStatusCode || 500,
       ...corsHeaders,
-      body: JSON.stringify({ name: e.name, message: e.message, stack: e.stack }),
+      body: JSON.stringify({
+        name: e.name,
+        message: e.message,
+        stack: e.stack,
+      }),
     };
   }
 };
@@ -184,7 +183,7 @@ const sendEmail = async (to: string, subject: string, body: string) => {
         Data: subject,
       },
     },
-    Source: "vTwinsForm <denish@vtwinsform.com>",
+    Source: "BrownLama <denish@BrownLama.com>",
   };
   try {
     await ses.send(new SendEmailCommand(params));

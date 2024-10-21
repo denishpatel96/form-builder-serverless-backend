@@ -1,10 +1,5 @@
 import * as fs from "fs";
-import {
-  DeleteItemCommand,
-  DynamoDBClient,
-  GetItemCommand,
-  PutItemCommand,
-} from "@aws-sdk/client-dynamodb";
+import { DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 import { SES, SendEmailCommandInput, SendEmailCommand } from "@aws-sdk/client-ses";
@@ -145,7 +140,7 @@ const sendEmail = async (to: string, subject: string, body: string) => {
         Data: subject,
       },
     },
-    Source: "vTwinsForm <denish@vtwinsform.com>",
+    Source: "BrownLama <denish@BrownLama.com>",
   };
   try {
     await ses.send(new SendEmailCommand(params));

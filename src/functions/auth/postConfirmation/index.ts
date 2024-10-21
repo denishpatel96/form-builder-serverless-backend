@@ -13,16 +13,13 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
       // Send email
       let template = fs.readFileSync(dirPath + "accountConfirmedEmail.html", "utf8");
 
-      const url =
-        process.env.STAGE === "prod"
-          ? "https://vtwinsform.com/login"
-          : "http://localhost:3000/login";
+      const url = process.env.STAGE === "prod" ? "https://BrownLama.com/login" : "http://localhost:3000/login";
       template = template.replace("$USER_NAME$", firstName);
       template = template.replace("$URL$", url);
       await sendEmail(email, "Account Confirmed Successfully", template);
     } else if (event.triggerSource === "PostConfirmation_ConfirmForgotPassword") {
       // Send email
-      const url = process.env.STAGE === "prod" ? "https://vtwinsform.com" : "http://localhost:3000";
+      const url = process.env.STAGE === "prod" ? "https://BrownLama.com" : "http://localhost:3000";
       const link = url + `/forgotPassword?email=${email}`;
       let template = fs.readFileSync(dirPath + "passwordChangedEmail.html", "utf8");
       template = template.replace("$USER_NAME$", firstName);
@@ -53,7 +50,7 @@ const sendEmail = async (to: string, subject: string, body: string) => {
       },
     },
     // Replace source_email with your SES validated email address
-    Source: "vTwinsForm <denish@vtwinsform.com>",
+    Source: "BrownLama <denish@BrownLama.com>",
   };
   try {
     await ses.send(new SendEmailCommand(params));
