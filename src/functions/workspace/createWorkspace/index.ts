@@ -110,11 +110,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       let response: BatchWriteItemOutput = await db.send(new BatchWriteItemCommand(bwParams));
 
       // handle unprocessed item
-      while (
-        response &&
-        response.UnprocessedItems &&
-        Object.keys(response.UnprocessedItems).length > 0
-      ) {
+      while (response && response.UnprocessedItems && Object.keys(response.UnprocessedItems).length > 0) {
         let params: BatchWriteItemCommandInput = { RequestItems: response.UnprocessedItems };
         response = await db.send(new BatchWriteItemCommand(params));
       }
@@ -125,7 +121,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       ...corsHeaders,
       body: JSON.stringify({
         message: "Workspace created successfully!",
-        workspaceId: workspaceData.workspaceId,
+        content: workspaceData,
       }),
     };
   } catch (e) {

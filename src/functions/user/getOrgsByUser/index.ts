@@ -1,9 +1,4 @@
-import {
-  AttributeValue,
-  DynamoDBClient,
-  QueryCommand,
-  QueryCommandInput,
-} from "@aws-sdk/client-dynamodb";
+import { AttributeValue, DynamoDBClient, QueryCommand, QueryCommandInput } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 const db = new DynamoDBClient({ region: process.env.REGION });
@@ -51,7 +46,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify(orgs),
+      body: JSON.stringify({ content: orgs }),
     };
   } catch (e) {
     console.error(e);

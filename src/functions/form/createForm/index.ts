@@ -1,9 +1,4 @@
-import {
-  DynamoDBClient,
-  GetItemCommand,
-  GetItemCommandInput,
-  PutItemCommand,
-} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, GetItemCommandInput, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 const db = new DynamoDBClient({ region: process.env.REGION });
@@ -75,7 +70,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       ...corsHeaders,
       body: JSON.stringify({
         message: "Form created successfully!",
-        formId: formData.formId,
+        content: formData,
       }),
     };
   } catch (e) {

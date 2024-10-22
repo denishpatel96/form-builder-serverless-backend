@@ -41,7 +41,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify(response),
+      body: JSON.stringify({ content: response, message: "Authenticated successfully!" }),
     };
   } catch (e) {
     console.error(e);

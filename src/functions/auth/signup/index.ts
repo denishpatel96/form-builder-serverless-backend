@@ -93,7 +93,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify({ email, userId }),
+      body: JSON.stringify({ content: { email, userId }, message: "Signed up successfully!" }),
     };
   } catch (e) {
     console.error(e);

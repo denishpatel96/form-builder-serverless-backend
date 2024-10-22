@@ -72,7 +72,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify(orgMembers),
+      body: JSON.stringify({ content: orgMembers }),
     };
   } catch (e) {
     console.error(e);

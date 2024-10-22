@@ -1,8 +1,4 @@
-import {
-  DynamoDBClient,
-  UpdateItemCommand,
-  UpdateItemCommandInput,
-} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, UpdateItemCommand, UpdateItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { APIGatewayProxyHandler } from "aws-lambda";
 const db = new DynamoDBClient({ region: process.env.REGION });
@@ -29,24 +25,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const dateString = new Date().toISOString();
     const userData = { ...updates, updatedAt: dateString };
     const objKeys = Object.keys(userData);
-    const notAllowedAttributes = [
-      "createdAt",
-      "memberCount",
-      "formCount",
-      "responseCount",
-      "workspaceCount",
-      "id",
-    ];
+    const notAllowedAttributes = ["createdAt", "memberCount", "formCount", "responseCount", "workspaceCount", "id"];
     const updateUserParams: UpdateItemCommandInput = {
       TableName: process.env.USERS_TABLE,
       Key: marshall({ userId: username }),
       UpdateExpression: `SET ${objKeys.map((key, index) =>
         notAllowedAttributes.includes(key) ? "" : `#key${index} = :value${index}`
       )}`,
-      ExpressionAttributeNames: objKeys.reduce(
-        (acc, key, index) => ({ ...acc, [`#key${index}`]: key }),
-        {}
-      ),
+      ExpressionAttributeNames: objKeys.reduce((acc, key, index) => ({ ...acc, [`#key${index}`]: key }), {}),
       ExpressionAttributeValues: marshall(
         objKeys.reduce(
           (acc, key, index) => ({
@@ -62,7 +48,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify(userData),
+      body: JSON.stringify({ content: userData, message: "User updated successfully!" }),
     };
   } catch (e) {
     console.error(e);

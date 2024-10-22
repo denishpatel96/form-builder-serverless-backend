@@ -84,13 +84,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     const workspaceData = items
       .map((i) => unmarshall(i))
-      .filter((i) =>
-        orgId !== claimedUsername ? allowedWorkspaces.includes(i.workspaceId) : true
-      );
+      .filter((i) => (orgId !== claimedUsername ? allowedWorkspaces.includes(i.workspaceId) : true));
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify(workspaceData),
+      body: JSON.stringify({ content: workspaceData }),
     };
   } catch (e) {
     console.error(e);
