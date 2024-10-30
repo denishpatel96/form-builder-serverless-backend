@@ -33,6 +33,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       formId: formId,
       name: formName.substr(0, CHARACTER_LIMIT),
       responseCount: 0,
+      lastFieldId: 0,
+      order: "", // order of fields
       createdAt: dateString,
       createdBy: claimedUsername,
       updatedAt: dateString,

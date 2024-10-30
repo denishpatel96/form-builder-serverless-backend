@@ -19,6 +19,8 @@ provider:
     WORKSPACES_TABLE: ${self:custom.workspacesTableName}
     WORKSPACE_MEMBERS_TABLE: ${self:custom.workspaceMembersTableName}
     FORMS_TABLE: ${self:custom.formsTableName}
+    FORM_FIELDS_TABLE: ${self:custom.formFieldsTableName}
+    FORM_RESPONSES_TABLE: ${self:custom.formResponsesTableName}
     USER_POOL_ID: !Ref CognitoUserPool
     USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
   httpApi:
@@ -51,6 +53,8 @@ custom:
   workspacesTableName: workspaces-table-${self:provider.stage}
   workspaceMembersTableName: workspace-members-table-${self:provider.stage}
   formsTableName: forms-table-${self:provider.stage}
+  formFieldsTableName: form-fields-table-${self:provider.stage}
+  formResponsesTableName: form-responses-table-${self:provider.stage}
   orgMemberInvitationsTableName: org-member-invitations-table-${self:provider.stage}
   # cognito user pool
   userPoolName: form-builder-user-pool-${self:provider.stage}
@@ -79,6 +83,9 @@ functions:
   - ${file(./src/functions/form/createForm/createForm.yml)}
   - ${file(./src/functions/form/deleteForm/deleteForm.yml)}
   - ${file(./src/functions/form/getFormsByWorkspace/getFormsByWorkspace.yml)}
+  - ${file(./src/functions/form/getFormFields/getFormFields.yml)}
+  - ${file(./src/functions/form/postCreateForm/postCreateForm.yml)}
+  - ${file(./src/functions/form/postDeleteForm/postDeleteForm.yml)}
   - ${file(./src/functions/form/updateForm/updateForm.yml)}
   - ${file(./src/functions/orgMember/getOrgMembers/getOrgMembers.yml)}
   - ${file(./src/functions/orgMember/updateOrgMember/updateOrgMember.yml)}
@@ -260,6 +267,40 @@ resources:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.formsTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    FormFieldsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: formId
+            KeyType: HASH
+          - AttributeName: fieldId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: formId
+            AttributeType: S
+          - AttributeName: fieldId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.formFieldsTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    FormResponsesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: formId
+            KeyType: HASH
+          - AttributeName: responseId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: formId
+            AttributeType: S
+          - AttributeName: responseId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.formResponsesTableName}
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
     CognitoUserPool:

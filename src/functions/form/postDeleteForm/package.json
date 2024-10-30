@@ -1,0 +1,7 @@
+{
+  "name": "post-delete-form",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function triggered after form is deleted in dynamodb table",
+  "author": "Denish Patel"
+}
