@@ -51,6 +51,29 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       }
     }
 
+    // Check whether form belongs to workspace or not.
+    // Get the form from database
+    const { Item } = await db.send(
+      new GetItemCommand({
+        TableName: process.env.FORMS_TABLE,
+        Key: marshall({
+          workspaceId,
+          formId,
+        }),
+      })
+    );
+
+    // If there is no such form in this workspace, return 403
+    if (!Item) {
+      return {
+        statusCode: 403,
+        ...corsHeaders,
+        body: JSON.stringify({
+          message: "There is no such form in this workspace.",
+        }),
+      };
+    }
+
     // =============== ADD FIELDS ===============
     if (action === "ADD_FIELDS") {
       if (!(lastFieldId && lastFieldId > 0 && order && order.length > 0 && fields && fields.length > 0)) {
@@ -139,7 +162,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     }
 
     // convert order array to string with space as delimiter
-    const newOrder = order.join(" ");
     const updatedAt = new Date().toISOString();
     await db.send(
       new UpdateItemCommand({
@@ -151,16 +173,16 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         #updatedAt = :updatedAt`,
         ExpressionAttributeNames:
           action === "ADD_FIELDS"
-            ? { $lastFieldId: "lastFieldId", "#order": "order", "#updatedAt": "updatedAt" }
+            ? { "#lastFieldId": "lastFieldId", "#order": "order", "#updatedAt": "updatedAt" }
             : action === "UPDATE_FIELDS"
             ? { "#updatedAt": "updatedAt" }
             : { "#order": "order", "#updatedAt": "updatedAt" },
         ExpressionAttributeValues: marshall(
           action === "ADD_FIELDS"
-            ? { ":lastFieldId": lastFieldId, ":order": newOrder, ":updatedAt": updatedAt }
+            ? { ":lastFieldId": lastFieldId, ":order": order.join(" "), ":updatedAt": updatedAt }
             : action === "UPDATE_FIELDS"
             ? { ":updatedAt": updatedAt }
-            : { ":order": newOrder, ":updatedAt": updatedAt }
+            : { ":order": order.join(" "), ":updatedAt": updatedAt }
         ),
       })
     );
