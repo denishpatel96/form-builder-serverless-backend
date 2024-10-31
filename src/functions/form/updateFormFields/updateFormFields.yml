@@ -1,0 +1,29 @@
+updateFormFields:
+  handler: dist/form/updateFormFields/index.handler
+  package:
+    patterns:
+      - "dist/form/updateFormFields/**"
+      - "!dist/form/updateFormFields/**/*.ts"
+      - "!dist/form/updateFormFields/**/*.yml"
+  name: update-form-fields-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /formFields
+        method: PUT
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt WorkspaceMembersTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource: !GetAtt FormsTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:BatchWriteItem"
+      Resource: !GetAtt FormFieldsTable.Arn

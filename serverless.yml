@@ -87,6 +87,7 @@ functions:
   - ${file(./src/functions/form/postCreateForm/postCreateForm.yml)}
   - ${file(./src/functions/form/postDeleteForm/postDeleteForm.yml)}
   - ${file(./src/functions/form/updateForm/updateForm.yml)}
+  - ${file(./src/functions/form/updateFormFields/updateFormFields.yml)}
   - ${file(./src/functions/orgMember/getOrgMembers/getOrgMembers.yml)}
   - ${file(./src/functions/orgMember/updateOrgMember/updateOrgMember.yml)}
   - ${file(./src/functions/orgMember/deleteOrgMember/deleteOrgMember.yml)}
