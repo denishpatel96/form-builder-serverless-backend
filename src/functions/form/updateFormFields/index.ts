@@ -191,6 +191,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       statusCode: 200,
       ...corsHeaders,
       body: JSON.stringify({
+        content: { updatedAt },
         message: `form fields ${
           action === "UPDATE_FIELDS"
             ? "updated"

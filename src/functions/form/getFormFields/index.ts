@@ -91,9 +91,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     await recursiveQuery();
 
-    const { lastFieldId, order } = unmarshall(Item);
+    const form = unmarshall(Item);
     // convert order string to array by splitting by space
-    const orderArray = order.split(" ");
+    const orderArray = form.order.split(" ");
     // sort fields in order
     fields.sort((a, b) => {
       return orderArray.indexOf(a.fieldId) - orderArray.indexOf(b.fieldId);
@@ -102,7 +102,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     return {
       statusCode: 200,
       ...corsHeaders,
-      body: JSON.stringify({ content: { fields, lastFieldId, order: orderArray, formId, workspaceId } }),
+      body: JSON.stringify({ content: { fields, form } }),
     };
   } catch (e) {
     console.error(e);
