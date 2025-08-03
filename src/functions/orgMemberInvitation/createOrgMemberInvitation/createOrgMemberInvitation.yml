@@ -1,0 +1,39 @@
+createOrgMemberInvitation:
+  handler: dist/orgMemberInvitation/createOrgMemberInvitation/index.handler
+  package:
+    patterns:
+      - "dist/orgMemberInvitation/createOrgMemberInvitation/**"
+      - "!dist/orgMemberInvitation/createOrgMemberInvitation/**/*.ts"
+      - "!dist/orgMemberInvitation/createOrgMemberInvitation/**/*.yml"
+  name: create-org-member-invitation-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /memberInvitations
+        method: POST
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource:
+        - Fn::GetAtt: [OrgMembersTable, Arn]
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+        - "dynamodb:GetItem"
+      Resource:
+        - Fn::GetAtt: [UsersTable, Arn]
+        - Fn::Join: ["/", [Fn::GetAtt: [UsersTable, Arn], "index", "email-index"]]
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+      Resource:
+        - Fn::GetAtt: [OrgMemberInvitationsTable, Arn]
+    - Effect: Allow
+      Action:
+        - "ses:SendEmail"
+        - "ses:SendRawEmail"
+      Resource: arn:aws:ses:us-west-2:954569320321:identity/*

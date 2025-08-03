@@ -1,0 +1,7 @@
+{
+  "name": "confirm-signup",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to confirm user signup",
+  "author": "Denish Patel"
+}

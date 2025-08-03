@@ -1,0 +1,7 @@
+{
+  "name": "delete-org-member-invitation",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to delete org member invitation",
+  "author": "Denish Patel"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "respond-to-org-member-invitation",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to respond to organization member invitation",
+  "author": "Denish Patel"
+}

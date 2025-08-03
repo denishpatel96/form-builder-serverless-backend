@@ -1,0 +1,7 @@
+{
+  "name": "post-create-org-member",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function triggered after org member is inserted in dynamodb table",
+  "author": "Denish Patel"
+}

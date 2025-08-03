@@ -1,0 +1,7 @@
+{
+  "name": "resend-code",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to resend confirmation code to user",
+  "author": "Denish Patel"
+}

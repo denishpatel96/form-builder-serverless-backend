@@ -1,0 +1,7 @@
+{
+  "name": "delete-org-member",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to delete org member",
+  "author": "Denish Patel"
+}

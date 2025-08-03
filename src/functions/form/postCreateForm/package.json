@@ -1,0 +1,7 @@
+{
+  "name": "post-create-form",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function triggered after form is inserted in dynamodb table",
+  "author": "Denish Patel"
+}

@@ -1,0 +1,25 @@
+deleteForm:
+  handler: dist/form/deleteForm/index.handler
+  package:
+    patterns:
+      - "dist/form/deleteForm/**"
+      - "!dist/form/deleteForm/**/*.ts"
+      - "!dist/form/deleteForm/**/*.yml"
+  name: delete-form-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /forms/{orgId}/{workspaceId}/{formId}
+        method: DELETE
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:DeleteItem"
+      Resource: !GetAtt FormsTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt WorkspaceMembersTable.Arn

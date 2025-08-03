@@ -1,4 +1,4 @@
-service: izzy-forms
+service: form-builder-api
 frameworkVersion: "3"
 
 provider:
@@ -11,22 +11,112 @@ provider:
     minimumCompressionSize: 1024
     shouldStartNameWithService: true
   environment:
+    STAGE: ${self:provider.stage}
     REGION: ${self:provider.region}
+    USERS_TABLE: ${self:custom.usersTableName}
+    ORG_MEMBERS_TABLE: ${self:custom.orgMembersTableName}
+    ORG_MEMBER_INVITATIONS_TABLE: ${self:custom.orgMemberInvitationsTableName}
+    WORKSPACES_TABLE: ${self:custom.workspacesTableName}
+    WORKSPACE_MEMBERS_TABLE: ${self:custom.workspaceMembersTableName}
     FORMS_TABLE: ${self:custom.formsTableName}
+    FORM_FIELDS_TABLE: ${self:custom.formFieldsTableName}
+    FORM_RESPONSES_TABLE: ${self:custom.formResponsesTableName}
+    USER_POOL_ID: !Ref CognitoUserPool
+    USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+  httpApi:
+    shouldStartNameWithService: true
+    # disableDefaultEndpoint: true
+    cors: true
+    authorizers:
+      jwtAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl:
+          Fn::Join:
+            - ""
+            - - "https://cognito-idp."
+              - ${self:provider.region}
+              - ".amazonaws.com/"
+              - !Ref CognitoUserPool
+        audience:
+          - !Ref CognitoUserPoolClient
 
 plugins:
   - serverless-iam-roles-per-function
   - serverless-offline
-
+  - serverless-api-gateway-throttling
+  - serverless-domain-manager
 custom:
+  # dynamodb tables
+  usersTableName: users-table-${self:provider.stage}
+  orgMembersTableName: org-members-table-${self:provider.stage}
+  workspacesTableName: workspaces-table-${self:provider.stage}
+  workspaceMembersTableName: workspace-members-table-${self:provider.stage}
   formsTableName: forms-table-${self:provider.stage}
+  formFieldsTableName: form-fields-table-${self:provider.stage}
+  formResponsesTableName: form-responses-table-${self:provider.stage}
+  orgMemberInvitationsTableName: org-member-invitations-table-${self:provider.stage}
+  # cognito user pool
+  userPoolName: form-builder-user-pool-${self:provider.stage}
+  # cognito user pool client
+  userPoolClientName: form-builder-user-pool-client-${self:provider.stage}
+  # cognito identity pool
+  identityPoolName: form-builder-identity-pool-${self:provider.stage}
+  # required by serverless-api-gateway-throttling plugin for apigateway
+  apiGatewayThrottling:
+    maxRequestsPerSecond: 5
+    maxConcurrentRequests: 5
+  apiDomain:
+    dev: dev-api.brownlama.com
+    prod: api.brownlama.com
+  # required by serverless-domain-manger plugin for apigateway
+  customDomain:
+    http:
+      domainName: ${self:custom.apiDomain.${self:provider.stage}}
+      basePath: ""
+      stage: ${self:provider.stage}
+      certificateName: brownlama.com
+      endpointType: regional
+      createRoute53Record: false
 
 functions:
-  - ${file(./src/functions/createForm/serverless.yml)}
-  - ${file(./src/functions/getFormsByOwner/serverless.yml)}
-  - ${file(./src/functions/getForm/serverless.yml)}
-  - ${file(./src/functions/updateForm/serverless.yml)}
-  - ${file(./src/functions/deleteForm/serverless.yml)}
+  - ${file(./src/functions/form/createForm/createForm.yml)}
+  - ${file(./src/functions/form/deleteForm/deleteForm.yml)}
+  - ${file(./src/functions/form/getFormsByWorkspace/getFormsByWorkspace.yml)}
+  - ${file(./src/functions/form/getFormFields/getFormFields.yml)}
+  - ${file(./src/functions/form/postCreateForm/postCreateForm.yml)}
+  - ${file(./src/functions/form/postDeleteForm/postDeleteForm.yml)}
+  - ${file(./src/functions/form/updateForm/updateForm.yml)}
+  - ${file(./src/functions/form/updateFormFields/updateFormFields.yml)}
+  - ${file(./src/functions/orgMember/getOrgMembers/getOrgMembers.yml)}
+  - ${file(./src/functions/orgMember/updateOrgMember/updateOrgMember.yml)}
+  - ${file(./src/functions/orgMember/deleteOrgMember/deleteOrgMember.yml)}
+  - ${file(./src/functions/orgMemberInvitation/createOrgMemberInvitation/createOrgMemberInvitation.yml)}
+  - ${file(./src/functions/orgMemberInvitation/deleteOrgMemberInvitation/deleteOrgMemberInvitation.yml)}
+  - ${file(./src/functions/orgMemberInvitation/getOrgMemberInvitations/getOrgMemberInvitations.yml)}
+  - ${file(./src/functions/orgMemberInvitation/respondToOrgMemberInvitation/respondToOrgMemberInvitation.yml)}
+  - ${file(./src/functions/user/getOrgsByUser/getOrgsByUser.yml)}
+  - ${file(./src/functions/user/getUser/getUser.yml)}
+  - ${file(./src/functions/user/updateUser/updateUser.yml)}
+  - ${file(./src/functions/user/postUpdateUser/postUpdateUser.yml)}
+  - ${file(./src/functions/workspace/getWorkspaces/getWorkspaces.yml)}
+  - ${file(./src/functions/workspace/createWorkspace/createWorkspace.yml)}
+  - ${file(./src/functions/workspace/updateWorkspace/updateWorkspace.yml)}
+  - ${file(./src/functions/workspace/deleteWorkspace/deleteWorkspace.yml)}
+  - ${file(./src/functions/workspace/postCreateWorkspace/postCreateWorkspace.yml)}
+  - ${file(./src/functions/workspace/postDeleteWorkspace/postDeleteWorkspace.yml)}
+  - ${file(./src/functions/auth/authenticate/authenticate.yml)}
+  - ${file(./src/functions/auth/changePassword/changePassword.yml)}
+  - ${file(./src/functions/auth/confirmForgotPassword/confirmForgotPassword.yml)}
+  - ${file(./src/functions/auth/confirmSignup/confirmSignup.yml)}
+  - ${file(./src/functions/auth/customMessage/customMessage.yml)}
+  - ${file(./src/functions/auth/forgotPassword/forgotPassword.yml)}
+  - ${file(./src/functions/auth/logout/logout.yml)}
+  - ${file(./src/functions/auth/postConfirmation/postConfirmation.yml)}
+  - ${file(./src/functions/auth/resendCode/resendCode.yml)}
+  - ${file(./src/functions/auth/signup/signup.yml)}
+  - ${file(./src/functions/auth/updateUserAttributes/updateUserAttributes.yml)}
+  - ${file(./src/functions/auth/verifyUserAttribute/verifyUserAttribute.yml)}
 
 package:
   individually: true
@@ -35,32 +125,324 @@ package:
 
 resources:
   Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: email-index
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.usersTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    OrgMembersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: orgId
+            KeyType: HASH
+          - AttributeName: userId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: orgId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: userId-orgId-index
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: orgId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.orgMembersTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    WorkspacesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: orgId
+            KeyType: HASH
+          - AttributeName: workspaceId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: orgId
+            AttributeType: S
+          - AttributeName: workspaceId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.workspacesTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    WorkspaceMembersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: workspaceId
+            KeyType: HASH
+          - AttributeName: userId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: workspaceId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: userId-workspaceId-index
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: workspaceId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.workspaceMembersTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    OrgMemberInvitationsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: orgId
+            KeyType: HASH
+          - AttributeName: email
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+          - AttributeName: orgId
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: email-orgId-index
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+              - AttributeName: orgId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.orgMemberInvitationsTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
     FormsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.formsTableName}
+        KeySchema:
+          - AttributeName: workspaceId
+            KeyType: HASH
+          - AttributeName: formId
+            KeyType: RANGE
         AttributeDefinitions:
+          - AttributeName: workspaceId
+            AttributeType: S
           - AttributeName: formId
             AttributeType: S
-          - AttributeName: ownerId
+          - AttributeName: orgId
             AttributeType: S
-          - AttributeName: createdAt
-            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: orgId-formId-index
+            KeySchema:
+              - AttributeName: orgId
+                KeyType: HASH
+              - AttributeName: formId
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.formsTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    FormFieldsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
         KeySchema:
           - AttributeName: formId
             KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: OwnerIdIndex
-            KeySchema:
-              - AttributeName: ownerId
-                KeyType: HASH
-              - AttributeName: createdAt
-                KeyType: RANGE
-            Projection:
-              ProjectionType: "ALL"
-            ProvisionedThroughput:
-              ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+          - AttributeName: fieldId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: formId
+            AttributeType: S
+          - AttributeName: fieldId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.formFieldsTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    FormResponsesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        KeySchema:
+          - AttributeName: formId
+            KeyType: HASH
+          - AttributeName: responseId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: formId
+            AttributeType: S
+          - AttributeName: responseId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.formResponsesTableName}
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:custom.userPoolName}
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        AdminCreateUserConfig:
+          AllowAdminCreateUserOnly: false
+        AliasAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        DeletionProtection: INACTIVE
+        EmailConfiguration:
+          EmailSendingAccount: DEVELOPER
+          SourceArn: arn:aws:ses:us-west-2:954569320321:identity/brownlama.com
+          From: BrownLama <denish@brownlama.com>
+          ReplyToEmailAddress: denish@brownlama.com
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+            RequireUppercase: true
+            TemporaryPasswordValidityDays: 30
+        Schema:
+          - Name: email
+            Required: true
+            AttributeDataType: String
+            Mutable: true
+          - Name: given_name
+            Required: true
+            AttributeDataType: String
+            Mutable: true
+          - Name: family_name
+            Required: true
+            AttributeDataType: String
+            Mutable: true
+        UserAttributeUpdateSettings:
+          AttributesRequireVerificationBeforeUpdate:
+            - email
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:custom.userPoolClientName}
+        UserPoolId:
+          Ref: CognitoUserPool
+        AccessTokenValidity: 9
+        IdTokenValidity: 9
+        ExplicitAuthFlows:
+          - "ALLOW_USER_PASSWORD_AUTH"
+          - "ALLOW_REFRESH_TOKEN_AUTH"
+          - "ALLOW_CUSTOM_AUTH"
+        GenerateSecret: false
+        RefreshTokenValidity: 30
+    CognitoIdentityPool:
+      Type: AWS::Cognito::IdentityPool
+      Properties:
+        IdentityPoolName: ${self:custom.identityPoolName}
+        AllowUnauthenticatedIdentities: false
+        CognitoIdentityProviders:
+          - ClientId:
+              Ref: CognitoUserPoolClient
+            ProviderName:
+              Fn::GetAtt: [CognitoUserPool, ProviderName]
+    CognitoIdentityPoolRoles:
+      Type: AWS::Cognito::IdentityPoolRoleAttachment
+      Properties:
+        IdentityPoolId:
+          Ref: CognitoIdentityPool
+        Roles:
+          authenticated:
+            Fn::GetAtt: [CognitoAuthRole, Arn]
+          unauthenticated:
+            Fn::GetAtt: [CognitoUnauthRole, Arn]
+    CognitoAuthRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: appAuthRole
+        Path: /
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Federated: "cognito-identity.amazonaws.com"
+              Action:
+                - "sts:AssumeRoleWithWebIdentity"
+              Condition:
+                StringEquals:
+                  "cognito-identity.amazonaws.com:aud":
+                    Ref: CognitoIdentityPool
+                "ForAnyValue:StringLike":
+                  "cognito-identity.amazonaws.com:amr": authenticated
+        Policies:
+          - PolicyName: "CognitoAuthorizedPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "mobileanalytics:PutEvents"
+                    - "cognito-sync:*"
+                    - "cognito-identity:*"
+                  Resource: "*"
+                - Effect: "Allow"
+                  Action:
+                    - "execute-api:Invoke"
+                  Resource: "*"
+    CognitoUnauthRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: appUnauthRole
+        Path: /
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Federated: "cognito-identity.amazonaws.com"
+              Action:
+                - "sts:AssumeRoleWithWebIdentity"
+              Condition:
+                StringEquals:
+                  "cognito-identity.amazonaws.com:aud":
+                    Ref: CognitoIdentityPool
+                "ForAnyValue:StringLike":
+                  "cognito-identity.amazonaws.com:amr": unauthenticated
+        Policies:
+          - PolicyName: "CognitoUnauthorizedPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "mobileanalytics:PutEvents"
+                    - "cognito-sync:*"
+                    - "cognito-identity:*"
+                  Resource: "*"

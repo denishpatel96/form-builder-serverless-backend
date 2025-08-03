@@ -1,0 +1,7 @@
+{
+  "name": "update-workspace",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to update workspace",
+  "author": "Denish Patel"
+}

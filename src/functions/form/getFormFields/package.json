@@ -1,0 +1,7 @@
+{
+  "name": "get-form-fields",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to get form fields.",
+  "author": "Denish Patel"
+}

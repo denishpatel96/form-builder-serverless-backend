@@ -1,0 +1,21 @@
+logout:
+  handler: ./dist/auth/logout/index.handler
+  package:
+    patterns:
+      - "dist/auth/logout/**"
+      - "!dist/auth/logout/**/*.ts"
+      - "!dist/auth/logout/**/*.yml"
+  name: logout-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /auth/logout
+        method: POST
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "cognito-idp:RevokeToken"
+      Resource: !GetAtt CognitoUserPool.Arn

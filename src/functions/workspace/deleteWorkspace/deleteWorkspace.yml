@@ -1,0 +1,25 @@
+deleteWorkspace:
+  handler: dist/workspace/deleteWorkspace/index.handler
+  package:
+    patterns:
+      - "dist/workspace/deleteWorkspace/**"
+      - "!dist/workspace/deleteWorkspace/**/*.ts"
+      - "!dist/workspace/deleteWorkspace/**/*.yml"
+  name: delete-workspace-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /workspaces/{orgId}/{workspaceId}
+        method: DELETE
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:DeleteItem"
+      Resource: !GetAtt WorkspacesTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt WorkspaceMembersTable.Arn

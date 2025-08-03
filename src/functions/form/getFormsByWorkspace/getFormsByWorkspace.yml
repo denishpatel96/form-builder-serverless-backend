@@ -1,0 +1,25 @@
+getFormsByWorkspace:
+  handler: dist/form/getFormsByWorkspace/index.handler
+  package:
+    patterns:
+      - "dist/form/getFormsByWorkspace/**"
+      - "!dist/form/getFormsByWorkspace/**/*.ts"
+      - "!dist/form/getFormsByWorkspace/**/*.yml"
+  name: get-forms-by-workspace-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /forms/{orgId}/{workspaceId}
+        method: GET
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt WorkspaceMembersTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+      Resource: !GetAtt FormsTable.Arn

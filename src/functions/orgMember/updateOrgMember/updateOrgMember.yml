@@ -1,0 +1,22 @@
+updateOrgMember:
+  handler: dist/orgMember/updateOrgMember/index.handler
+  package:
+    patterns:
+      - "dist/orgMember/updateOrgMember/**"
+      - "!dist/orgMember/updateOrgMember/**/*.ts"
+      - "!dist/orgMember/updateOrgMember/**/*.yml"
+  name: update-org-member-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /members
+        method: PUT
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:updateItem"
+        - "dynamodb:GetItem"
+      Resource: !GetAtt OrgMembersTable.Arn

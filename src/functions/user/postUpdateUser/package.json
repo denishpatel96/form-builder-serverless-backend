@@ -1,0 +1,7 @@
+{
+  "name": "post-modify-user",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function triggered if user is modified in dynamodb table",
+  "author": "Denish Patel"
+}

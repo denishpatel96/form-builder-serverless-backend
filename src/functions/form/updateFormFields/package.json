@@ -1,0 +1,7 @@
+{
+  "name": "update-form-fields",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to update form fields.",
+  "author": "Denish Patel"
+}

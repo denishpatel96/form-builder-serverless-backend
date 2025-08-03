@@ -1,0 +1,7 @@
+{
+  "name": "logout",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to logout user by revoking refresh token",
+  "author": "Denish Patel"
+}

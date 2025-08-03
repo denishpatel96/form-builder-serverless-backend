@@ -1,0 +1,22 @@
+deleteOrgMemberInvitation:
+  handler: dist/orgMemberInvitation/deleteOrgMemberInvitation/index.handler
+  package:
+    patterns:
+      - "dist/orgMemberInvitation/deleteOrgMemberInvitation/**"
+      - "!dist/orgMemberInvitation/deleteOrgMemberInvitation/**/*.ts"
+      - "!dist/orgMemberInvitation/deleteOrgMemberInvitation/**/*.yml"
+  name: delete-org-member-invitation-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /memberInvitations/{orgId}/{email}
+        method: DELETE
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:DeleteItem"
+        - "dynamodb:GetItem"
+      Resource: !GetAtt OrgMemberInvitationsTable.Arn

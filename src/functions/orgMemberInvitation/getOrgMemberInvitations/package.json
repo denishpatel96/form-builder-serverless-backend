@@ -1,0 +1,7 @@
+{
+  "name": "get-org-members",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to get invitations to be an org member",
+  "author": "Denish Patel"
+}

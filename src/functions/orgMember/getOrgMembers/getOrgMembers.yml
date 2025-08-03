@@ -1,0 +1,23 @@
+getOrgMembers:
+  handler: dist/orgMember/getOrgMembers/index.handler
+  package:
+    patterns:
+      - "dist/orgMember/getOrgMembers/**"
+      - "!dist/orgMember/getOrgMembers/**/*.ts"
+      - "!dist/orgMember/getOrgMembers/**/*.yml"
+  name: get-org-members-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /members/{orgId}
+        method: GET
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:Query"
+      Resource:
+        - Fn::GetAtt: [OrgMembersTable, Arn]

@@ -1,0 +1,19 @@
+resendCode:
+  handler: ./dist/auth/resendCode/index.handler
+  package:
+    patterns:
+      - "dist/auth/resendCode/**"
+      - "!dist/auth/resendCode/**/*.ts"
+      - "!dist/auth/resendCode/**/*.yml"
+  name: resend-code-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /auth/resendCode
+        method: POST
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "cognito-idp:ResendConfirmationCode"
+      Resource: !GetAtt CognitoUserPool.Arn

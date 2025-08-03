@@ -1,0 +1,25 @@
+updateWorkspace:
+  handler: dist/workspace/updateWorkspace/index.handler
+  package:
+    patterns:
+      - "dist/workspace/updateWorkspace/**"
+      - "!dist/workspace/updateWorkspace/**/*.ts"
+      - "!dist/workspace/updateWorkspace/**/*.yml"
+  name: update-workspace-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /workspaces
+        method: PUT
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt WorkspaceMembersTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource: !GetAtt WorkspacesTable.Arn

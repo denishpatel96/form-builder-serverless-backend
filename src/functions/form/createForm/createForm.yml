@@ -1,0 +1,26 @@
+createForm:
+  handler: dist/form/createForm/index.handler
+  package:
+    patterns:
+      - "dist/form/createForm/**"
+      - "!dist/form/createForm/**/*.ts"
+      - "!dist/form/createForm/**/*.yml"
+  name: create-form-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /forms
+        method: POST
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+      Resource: !GetAtt FormsTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt WorkspaceMembersTable.Arn

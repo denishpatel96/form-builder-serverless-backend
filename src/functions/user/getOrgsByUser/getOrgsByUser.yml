@@ -1,0 +1,22 @@
+getOrgsByUser:
+  handler: dist/user/getOrgsByUser/index.handler
+  package:
+    patterns:
+      - "dist/user/getOrgsByUser/**"
+      - "!dist/user/getOrgsByUser/**/*.ts"
+      - "!dist/user/getOrgsByUser/**/*.yml"
+  name: get-orgs-by-user-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /users/orgs/{username}
+        method: GET
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+      Resource:
+        - Fn::Join: ["/", [Fn::GetAtt: [OrgMembersTable, Arn], "index", "userId-orgId-index"]]

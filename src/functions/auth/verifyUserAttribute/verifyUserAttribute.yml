@@ -1,0 +1,21 @@
+verifyUserAttribute:
+  handler: ./dist/auth/verifyUserAttribute/index.handler
+  package:
+    patterns:
+      - "dist/auth/verifyUserAttribute/**"
+      - "!dist/auth/verifyUserAttribute/**/*.ts"
+      - "!dist/auth/verifyUserAttribute/**/*.yml"
+  name: verify-user-attribute-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /auth/verifyUserAttribute
+        method: POST
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "cognito-idp:VerifyUserAttribute"
+      Resource: !GetAtt CognitoUserPool.Arn

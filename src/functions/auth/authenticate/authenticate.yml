@@ -1,0 +1,19 @@
+authenticate:
+  handler: ./dist/auth/authenticate/index.handler
+  package:
+    patterns:
+      - "dist/auth/authenticate/**"
+      - "!dist/auth/authenticate/**/*.ts"
+      - "!dist/auth/authenticate/**/*.yml"
+  name: authenticate-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /auth/authenticate
+        method: POST
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "cognito-idp:InitiateAuth"
+      Resource: !GetAtt CognitoUserPool.Arn

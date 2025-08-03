@@ -1,0 +1,27 @@
+createWorkspace:
+  handler: dist/workspace/createWorkspace/index.handler
+  package:
+    patterns:
+      - "dist/workspace/createWorkspace/**"
+      - "!dist/workspace/createWorkspace/**/*.ts"
+      - "!dist/workspace/createWorkspace/**/*.yml"
+  name: create-workspace-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /workspaces
+        method: POST
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:BatchWriteItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+      Resource: !GetAtt WorkspacesTable.Arn
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource: !GetAtt OrgMembersTable.Arn

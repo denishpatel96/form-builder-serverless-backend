@@ -1,0 +1,25 @@
+postCreateForm:
+  handler: ./dist/form/postCreateForm/index.handler
+  package:
+    patterns:
+      - "dist/form/postCreateForm/**"
+      - "!dist/form/postCreateForm/**/*.ts"
+      - "!dist/form/postCreateForm/**/*.yml"
+  name: post-create-form-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - stream:
+        type: dynamodb
+        batchSize: 1
+        startingPosition: LATEST
+        arn: !GetAtt FormsTable.StreamArn
+        filterPatterns:
+          - eventName: [INSERT]
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource:
+        - Fn::GetAtt: [UsersTable, Arn]
+        - Fn::GetAtt: [WorkspacesTable, Arn]

@@ -1,0 +1,7 @@
+{
+  "name": "confirm-forgot-password",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to change (forgot) password using verification code",
+  "author": "Denish Patel"
+}

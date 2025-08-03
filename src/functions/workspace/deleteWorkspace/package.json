@@ -1,0 +1,7 @@
+{
+  "name": "delete-workspace",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to delete workspace",
+  "author": "Denish Patel"
+}

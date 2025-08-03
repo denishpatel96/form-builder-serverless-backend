@@ -1,0 +1,22 @@
+getUser:
+  handler: dist/user/getUser/index.handler
+  package:
+    patterns:
+      - "dist/user/getUser/**"
+      - "!dist/user/getUser/**/*.ts"
+      - "!dist/user/getUser/**/*.yml"
+  name: get-user-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /users/{username}
+        method: GET
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource:
+        - Fn::GetAtt: [UsersTable, Arn]

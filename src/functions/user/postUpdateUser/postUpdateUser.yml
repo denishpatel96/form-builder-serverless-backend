@@ -1,0 +1,37 @@
+postUpdateUser:
+  handler: ./dist/user/postUpdateUser/index.handler
+  package:
+    patterns:
+      - "dist/user/postUpdateUser/**"
+      - "!dist/user/postUpdateUser/**/*.ts"
+      - "!dist/user/postUpdateUser/**/*.yml"
+  name: post-update-user-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - stream:
+        type: dynamodb
+        batchSize: 1
+        startingPosition: LATEST
+        arn: !GetAtt UsersTable.StreamArn
+        filterPatterns:
+          - eventName: [MODIFY]
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+        - "dynamodb:Query"
+      Resource:
+        - Fn::GetAtt: [OrgMembersTable, Arn]
+    - Effect: Allow
+      Action:
+        - "dynamodb:UpdateItem"
+      Resource:
+        - Fn::GetAtt: [WorkspaceMembersTable, Arn]
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+      Resource:
+        - Fn::Join: ["/", [Fn::GetAtt: [OrgMembersTable, Arn], "index", "userId-orgId-index"]]
+        - Fn::Join:
+            ["/", [Fn::GetAtt: [WorkspaceMembersTable, Arn], "index", "userId-workspaceId-index"]]

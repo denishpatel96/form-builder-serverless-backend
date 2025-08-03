@@ -1,0 +1,7 @@
+{
+  "name": "create-org-member-invitation",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to create organization member invitation",
+  "author": "Denish Patel"
+}

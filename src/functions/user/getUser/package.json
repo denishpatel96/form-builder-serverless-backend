@@ -1,0 +1,7 @@
+{
+  "name": "get-user",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lambda function to get user",
+  "author": "Denish Patel"
+}

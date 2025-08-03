@@ -1,0 +1,29 @@
+getWorkspaces:
+  handler: dist/workspace/getWorkspaces/index.handler
+  package:
+    patterns:
+      - "dist/workspace/getWorkspaces/**"
+      - "!dist/workspace/getWorkspaces/**/*.ts"
+      - "!dist/workspace/getWorkspaces/**/*.yml"
+  name: get-workspaces-${self:provider.stage}
+  memorySize: 128 # mb
+  timeout: 5 # seconds
+  events:
+    - httpApi:
+        path: /workspaces/{orgId}
+        method: GET
+        authorizer:
+          name: jwtAuthorizer
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+      Resource:
+        - Fn::GetAtt: [OrgMembersTable, Arn]
+    - Effect: Allow
+      Action:
+        - "dynamodb:Query"
+      Resource:
+        - Fn::GetAtt: [WorkspacesTable, Arn]
+        - Fn::Join:
+            ["/", [Fn::GetAtt: [WorkspaceMembersTable, Arn], "index", "userId-workspaceId-index"]]
